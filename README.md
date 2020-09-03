@@ -1,10 +1,14 @@
-# 项目概述——**SaaS**：软件即服务(Software as a Service)
+# 项目概述：Bug追踪&任务管理追踪
+
+> # **SaaS**——软件即服务(Software as a Service)
 
 
 
 ![image-20200830162127236](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200830162127236.png)
 
-> bug追踪&任务管理追踪
+[TOC]
+
+
 
 ## 1. 如何学&如何讲
 
@@ -154,7 +158,7 @@ pip install django==1.11.28
 
 ### 2.搭建项目环境（django+虚拟环境）
 
-### 警醒：企业做项目开发 必须使用环境隔离
+### 特别注意：企业做项目开发 必须使用环境隔离
 
 ### 3.本地配置
 
@@ -363,6 +367,8 @@ pip install -r requirements.txt
 	- 倒计时效果
 	- 注册按钮：字段验证+手机号验证码
 	- py操作redis：使用django-redis模块
+
+# day03
 
 
 
