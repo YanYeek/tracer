@@ -23,8 +23,8 @@
 
 	```
 	py3:
-	    django 1.11版本 -> crm [维护]
-	    django 2.2 版本 -> 路飞 [新开发]
+	    - django 1.11版本 -> crm [维护]
+	    - django 2.2 版本 -> 路飞 [新开发]
 	虚拟环境：
 		自己电脑上都有py3
 		- 虚拟1：py3 纯净 django1.11
@@ -275,9 +275,9 @@ git clone https://gitee.com/YanYeek/SaaS.git
 
   - 满足本地不同需求的配置
 
-  	 - 开发
-  	 - 测试
-  	 - 运维
+    	 - 开发
+    	 - 测试
+      	 - 运维
 
 2. .gitignore的作用？
 
@@ -320,7 +320,7 @@ pip install -r requirements.txt
 - 注册
 - 登录
 
-
+[注册腾讯云 & 开通云短信](https://www.pythonav.com/wiki/detail/10/81/)
 
 
 
