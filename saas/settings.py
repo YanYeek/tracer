@@ -115,7 +115,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# 自定义短信模板
+# 自定义短信模板b
 SMS = 0
 
 try:
