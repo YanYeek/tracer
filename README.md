@@ -324,11 +324,45 @@ pip install -r requirements.txt
 
 
 
+### 2.Django的ModelForm
 
+- 自动生成表单
+- 做表单验证
 
+### 3.下一步思路
 
+- 点击获取验证码
+	- 获取手机号
+	- 向后台发送ajax
+		- 手机
+		- tpl=register
+	- 向手机发送验证码（ajax/sms/redis）
+	- 验证码失效处理 60s
 
+### 4.redis基本操作
 
+#### 4.1 安装redis
+
+- Windows
+
+- Linux
+
+#### 4.2 python操作redis的模块
+
+- redis的直接连接
+
+[安装操作文档](https://www.pythonav.com/wiki/detail/10/82/)
+
+## 作业
+
+- ModelForm页面
+- register页面写ajax，手机号和模板字符串tpl csrf问题
+- 校验
+- sms + redis
+- 进阶
+	- 倒计时效果
+	- 注册按钮：字段验证+手机号验证码
+	- py操作redis：使用django-redis模块
 
 
 
