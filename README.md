@@ -518,6 +518,38 @@ pip install -r requirements.txt
 
 ![image-20200904124544228](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200904124544228.png)
 
+##### 1.1.2 下载静态文件
+
+1. https://blog.jquery.com/2019/05/01/jquery-3-4-1-triggering-focus-events-in-ie-and-finding-root-elements-in-ios-10/
+2. https://v3.bootcss.com/getting-started/#download
+3. https://fontawesome.dashgame.com/
+
+##### 1.1.3 母版准备
+
+![image-20200904131838890](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200904131838890.png)
+
+
+
+
+
+##### 1.1.4 URL准备
+
+![image-20200904142346822](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200904142346822.png)
+
+
+
+![image-20200904142409649](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200904142409649.png)
+
+commit：路由处理
+
+##### 1.1.5注册页面显示
+
+- 母版中导航
+- 注册页面样式
+- ModelForm放到指定目录forms
+
+
+
 #### 1.2 点击获取验证码
 
 

@@ -7,6 +7,9 @@
 @desc:用户相关功能：注册、短信、登录、注销
 '''
 from django.shortcuts import render, HttpResponse
+from web.forms.account import RegisterModelForm
+
 
 def register(requests):
-	return render(requests, 'register.html')
+	form = RegisterModelForm()
+	return render(requests, 'register.html', {'form': form})
