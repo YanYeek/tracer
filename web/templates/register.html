@@ -1,11 +1,18 @@
 {% extends 'layout/basic.html' %}
 {% load static %}
 
-{% block title %}用户注册{% endblock %}
+{% block title %} 用户注册 {% endblock %}
 
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/account.css' %}">
+    <style>
+        .error-msg {
+            color: red;
+            position: absolute;
+            font-size: 13px;
+        }
+    </style>
 {% endblock %}
 
 
@@ -15,15 +22,19 @@
     <div class="account">
 
         <div class="title">用户注册</div>
-        <form id="form" method="post" novalidate>
+        <form id="form" method="POST" novalidate>
             {% csrf_token %}
             {% for field in form %}
                 {% if field.name == 'code' %}
                     <div class="form-group">
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        <div class="clearfix">
-                            <div class="col-md-6" style="padding-left: 0">{{ field }}</div>
-                            <div class="col-md-6"><input class="btn btn-default" type="button" value="点击获取验证码">
+                        <div class="row">
+                            <div class="col-xs-7">
+                                {{ field }}
+                                <span class="error-msg"></span>
+                            </div>
+                            <div class="col-xs-5">
+                                <input id="btnSms" class="btn btn-default" type="button" value="点击获取验证码">
                             </div>
                         </div>
                     </div>
@@ -31,12 +42,13 @@
                     <div class="form-group">
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
+                        <span class="error-msg"></span>
                     </div>
                 {% endif %}
             {% endfor %}
             <div class="row">
                 <div class="col-xs-3">
-                    <input type="button" class="btn btn-primary" value="注册">
+                    <input id="btnSubmit" type="button" class="btn btn-primary" value="注册">
                 </div>
             </div>
 
@@ -47,5 +59,42 @@
 
 
 {% block js %}
+    <script>
+        // 页面框架加载完成后字段执行的函数
+        $(function () {
+            bindClickBtnSms();
+        })
 
+        /*点击获取验证码的按钮绑定事件*/
+        function bindClickBtnSms() {
+            $('#btnSms').click(function () {
+
+                $('.error-msg').empty();
+
+                // 获取用户输入的手机号；
+                // 找到输入框的id，根据id获取值；如何找到手机号的ID？
+                var mobilePhone = $('#id_phone').val();
+
+                // 发送Ajax请求，把手机号发送过去
+                $.ajax({
+                    url: "{% url 'send_sms' %}", // 等价于/send/sms/
+                    type: "GET",
+                    data: {phone: mobilePhone, tpl: "register",},
+                    dataType: "JSON", // 将服务端返回的数据反序列化为字典对象
+                    success: function (res) {
+                        // Ajax请求发送成功之后，找到执行的函数；res就是后端返回的值
+                        if (res.status) {
+                            console.log('发送成功，倒计时')
+                        } else {
+                            // 显示错误信息
+                            console.log(res) // {status:False,error:{phone:["错误信息"，]}}
+                            $.each(res.error, function (key, value) {
+                                $("#id_" + key).next().text(value[0]);
+                            })
+                        }
+                    }
+                })
+            })
+        }
+    </script>
 {% endblock %}
