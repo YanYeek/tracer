@@ -84,10 +84,10 @@
                     success: function (res) {
                         // Ajax请求发送成功之后，找到执行的函数；res就是后端返回的值
                         if (res.status) {
-                            console.log('发送成功，倒计时')
+                            sendSmsRemind();
                         } else {
                             // 显示错误信息
-                            console.log(res) // {status:False,error:{phone:["错误信息"，]}}
+                            // console.log(res) // {status:False,error:{phone:["错误信息"，]}}
                             $.each(res.error, function (key, value) {
                                 $("#id_" + key).next().text(value[0]);
                             })
@@ -95,6 +95,24 @@
                     }
                 })
             })
+        }
+
+        /*
+        倒计时
+         */
+        function sendSmsRemind() {
+            var $smsBtn = $('#btnSms')
+            $smsBtn.prop('disabled', true); // 禁用
+
+            var time = 60;
+            var remind = setInterval(function () {
+                $smsBtn.val(time + '秒重新发送');
+                time = time - 1
+                if (time < 1) {
+                    clearInterval(remind);
+                    $smsBtn.val('点击获取验证码').prop('disabled', false);
+                }
+            }, 1000)
         }
     </script>
 {% endblock %}

@@ -586,11 +586,128 @@ commit：路由处理
 ##### 1.2.6 成功失败处理
 
 - 失败，错误信息
+
 - 成功，倒计时
+
+	- disabled属性
+
+		```
+		$("#btnSms").prop("disabled", ture); 添加disabled属性，不可操作。
+		$("#btnSms").prop("disabled", false); 移除disabled属性，可操作。
+		```
+
+	- 定时器
+
+		```javascript
+		var obj = setInterval(function(){
+			console.log(123);
+		}, 1000)
+		
+		clearInterval(obj);
+		```
+
+		```javascript
+		var time = 60;
+		var obj = setInterval(function(){
+			time = time - 1;
+			if(time < 1){
+		     	clearInterval(obj);	            
+		     }
+		}, 1000)
+		```
+
+		
+
+		
 
 
 
 #### 1.3 点击注册
+
+
+
+## 内容总结
+
+- 视图 view.py -> views目录
+
+- 模板，根目录templates -> 个人那句app注册顺序去每个app的templates中载入
+
+- 静态文件，static同上载入规则
+
+- 项目中多个app且想要各自模板、静态文件隔离，建议通过app名称再进行嵌套即可。
+
+- 路由分发
+
+	- include
+	- namespace
+
+- 母版
+
+	```
+	title
+	css
+	content
+	js
+	```
+
+- bootstrap导航条、去除圆角、container
+
+- ModelForm生成HTML标签，自动ID`id_字段名`
+
+- 发送Ajax请求
+
+	```js
+	$.ajax({
+	    url:'/index/',
+	    type:'GET',
+	    data:{},
+	    dataType:"JSON",
+	    sucess: function(res){
+	        console.log(res)
+	    }
+	})
+	```
+
+- Form & ModelForm可以进行表单校验
+
+	```
+	form = sendSmsForm(data=request.POST) # QueryDict
+	form = sendSmsForm(data=request.GET) # QueryDict
+	```
+
+- From & ModelForm 中如果想要用视图函数中的值（request）
+
+	```python
+	class SendSmsForm(forms.Form):
+		phone = forms.CharField(label='手机号', validators=[RegexValidator(r'^(1[3|4|5|6|7|8|9])\d{9}$', '手机号格式错误'), ])
+	
+		# 重写初始化函数来获取试图函数中的传值
+		def __init__(self, request, *args, **kwargs):
+			super().__init__(*args, **kwargs)
+			self.request = request
+	```
+
+- 短信
+- redis（django-redis）
+- 倒计时
+
+
+
+## 今日作业
+
+- 点击注册按钮
+- 短信登录
+- Django实现图片验证码（可选）
+
+
+
+
+
+
+
+
+
+
 
 
 

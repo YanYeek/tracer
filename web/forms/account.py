@@ -56,6 +56,7 @@ class SendSmsForm(forms.Form):
 		tpl = self.request.GET.get('tpl')
 		template_id = settings.TENCENT_SMS_TEMPLATE.get(tpl)
 		if not template_id:
+			# self.add_error('phone', '短信模板错误')
 			raise ValidationError('模板错误')
 
 		# 校验数据库中是否已有手机号
