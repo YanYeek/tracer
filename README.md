@@ -6,9 +6,7 @@
 
 ![image-20200830162127236](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200830162127236.png)
 
-[TOC]
-
-
+------
 
 ## 1. 如何学&如何讲
 
@@ -280,7 +278,7 @@ git clone https://gitee.com/YanYeek/SaaS.git
   - 满足本地不同需求的配置
 
     	 - 开发
-    	 - 测试
+        	 - 测试
       	 - 运维
 
 2. .gitignore的作用？
@@ -368,13 +366,163 @@ pip install -r requirements.txt
 	- 注册按钮：字段验证+手机号验证码
 	- py操作redis：使用django-redis模块
 
-# day03
+# day03 用户认证
+
+## 内容回顾&补充
+
+- 虚拟环境 virtualenv（为每个环境创建独立虚拟环境）
+
+- requirements.txt（pip freeze > requirements.txt）
+
+- local_settings.py 
+
+- .gitignore
+
+- 腾讯云短信/阿里云短信 （阅读文档，文档不清晰：谷歌、必应、搜狗都比百度强）
+
+	- API，提供URL，去访问这些URL并根据提示传参数。（所有第三方工具都有）
+
+		```python
+		requests.get("http://www.xx.com/sdf/sdf", json={.....})
+		```
+
+	- SDK，模块；下载安装模块，基于模块完成功能。
+
+	```python
+	sms.py
+		def func():
+			return requests.get("http://www.xx.com/sdf/sdf", json={.....})
+	```
+
+	```
+	pip install sms
+	```
+
+	```python
+	sms.func()
+	```
+
+- Redis,帮助我们在内存中存储数据的软件（基于内存的数据库）
+
+	- 第一步：在A主机安装redis&配置&启动
+
+	- 第二步：连接redis
+
+		- 方式一：利用redis提供的客户端。
+
+		- 方式二：利用相关模块。
+
+			- 安装模块
+
+				```python
+				pip isstall redis
+				```
+
+			- 使用模块(不推荐)
+
+				```python
+				import redis
+				
+				conn = redis,Redis(host='127.0.0.1', port=6379, password='foobared', encoding='uft-8')
+				
+				conn.set('13111111111', 9999, ex=10)
+				value = conn.get('13111111111')
+				print(value)
+				```
+
+			- 使用模块（推荐连接池）
+
+				```python
+				import redis
+				# 创建redis连接池（默认连接池最大连接数 2**31=2147483648）
+				pool = redis.ConnectionPool(host='10.211.55.28', port=6379, password='foobared', encoding='utf-8', max_connections=1000)
+				# 去连接池中获取一个连接
+				conn = redis.Redis(connection_pool=pool)
+				# 设置键值：15131255089="9999" 且超时时间为10秒（值写入到redis时会自动转字符串）
+				conn.set('name', "武沛齐", ex=10)
+				# 根据键获取值：如果存在获取值（获取到的是字节类型）；不存在则返回None
+				value = conn.get('name')
+				print(value)
+				```
+
+- django-redis, 在django中”方便“的使用redis。
+
+  ```
+  不方便：redis模块+连接池
+  方便：django-redis
+  ```
+
+  - 安装: ` django-redis`
+
+  	```
+  	pip install django-reids
+  	```
+
+  - 使用
+
+  	```python
+  	# 配置文件 settings.py (建议loacl_settings.py)
+  	CACHES = {
+  	    "default": {
+  	        "BACKEND": "django_redis.cache.RedisCache",
+  	        "LOCATION": "redis://10.211.55.28:6379", # 安装redis的主机的 IP 和 端口
+  	        "OPTIONS": {
+  	            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+  	            "CONNECTION_POOL_KWARGS": {
+  	                "max_connections": 1000,
+  	                "encoding": 'utf-8'
+  	            },
+  	            "PASSWORD": "foobared" # redis密码
+  	        }
+  	    }
+  	}
+  	```
+
+  	```python
+  	from django.shortcuts import HttpResponse
+  	from django_redis import get_redis_connection
+  	def index(request):
+  	    # 去连接池中获取一个连接
+  	    conn = get_redis_connection("default")
+  	    conn.set('nickname', "YanYeek", ex=10)
+  	    value = conn.get('nickname')
+  	    print(value)
+  	    return HttpResponse("OK")
+  	```
+
+  	
+
+  	
+
+## 今日概要
+
+- 注册
+- 短信验证码登录
+- 用户名密码登录
 
 
 
+## 今日详细
+
+### 1.实现注册
 
 
 
+#### 1.1 展示注册页面
+
+
+
+##### 1.1.1 创建web的应用
+
+- django渲染template顺序为先根目录下，次之是按app注册顺序下的模板文件夹，当遇到不同app的同名时渲染顺序会出错，所以在各app的templates目录下再创建同app名的子级文件夹嵌套来避免冲突；如公共模板就放在根目录文件夹下。static静态文件目录也同理。
+
+![image-20200904124544228](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200904124544228.png)
+
+#### 1.2 点击获取验证码
+
+
+
+#### 1.3 点击注册
 
 
 
