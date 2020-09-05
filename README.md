@@ -910,9 +910,56 @@ def register(request):
 
 #### 2.1 展示页面
 
+![image-20200905193217427](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200905193217427.png)
+
+
+
 #### 2.2 点击发送短信
 
+![image-20200905193236448](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200905193236448.png)
+
+
+
 #### 2.3 点击登录
+
+
+
+### 3. 用户名/密码登录
+
+
+
+#### 3.1 Python生成图片+写文字
+
+https://www.cnblogs.com/wupeiqi/articles/5812291.html
+
+```py
+pip install pillow
+```
+
+
+
+#### 3.2 Session & Cookie
+
+`django默认session超时时间为2周，但可以修改。`
+
+![image-20200905201313639](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200905201313639.png)
+
+#### 3.3 页面展示
+
+
+
+#### 3.4登录
+
+## 总结（一期项目结束）
+
+- 项目代码
+- 思维导图
+
+
+
+
+
+
 
 
 
