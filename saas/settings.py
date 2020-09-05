@@ -116,15 +116,16 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-############## 自定义短信模板 ###########
+############## 自定义短信 ###########
 TENCENT_SMS_APP_ID = None  # 自己应用ID
 TENCENT_SMS_APP_KEY = None  # 自己应用Key
 TENCENT_SMS_SIGN = None  # 自己腾讯云创建签名时填写的签名内容（使用公众号的话这个值一般是公众号全称或简称）
 
+# 填入发送短信的模板ID
 TENCENT_SMS_TEMPLATE = {
-	'login': 635855,
-	'register': 635855,
-	'reset': 635855,
+	'login': None,
+	'register': None,
+	'reset': None,
 }
 
 try:

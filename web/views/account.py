@@ -8,7 +8,8 @@
 '''
 from django.shortcuts import render
 from django.http import JsonResponse
-from web.forms.account import RegisterModelForm, SendSmsForm
+from web.forms.account import RegisterModelForm, SendSmsForm, LoginSMSForm
+# from django.views.decorators.csrf import csrf_exempt # 装饰驶入函数@csrf_exempt
 from web import models
 
 
@@ -41,5 +42,28 @@ def send_sms(request):
 	# 只校验手机号：不能为空、格式是否正确
 	if form.is_valid():
 		return JsonResponse({'status': True})
+
+	return JsonResponse({'status': False, 'error': form.errors})
+
+
+
+def login_sms(request):
+	"""
+	短信登录
+	:param request:
+	:return:
+	"""
+	if request.method == "GET":
+		form = LoginSMSForm()
+		return render(request, 'login_sms.html', {'form': form})
+
+	form = LoginSMSForm(request.POST)
+	if form.is_valid():
+		# 用户输入正确，登录成功。
+		user_object = form.cleaned_data.get('phone')
+		# 用户信息放入session
+		request.session['user_id'] = user_object.id
+		request.session['user_name'] = user_object.username
+		return JsonResponse({'status': True, 'data': "/index/"})
 
 	return JsonResponse({'status': False, 'error': form.errors})

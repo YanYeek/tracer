@@ -249,6 +249,8 @@ Branch 'master' set up to track remote branch 'master' from 'origin'.
 $ git push -f origin master
 ```
 
+修改origin推送链接`git remote set-url origin https://gitee.com/YanYeek/Tracer.git`
+
 #### 4.2测试获取代码
 
 https://gitee.com/YanYeek/SaaS.git
@@ -878,9 +880,39 @@ class RegisterModelForm(forms.ModelForm):
 
 
 
-#### 1.3 谢图数据库
+#### 1.3 写入数据库
+
+```python
+def register(request):
+	"""
+	注册页面
+	:param requests:
+	:return:
+	"""
+	if request.method == "GET":
+		form = RegisterModelForm()
+		return render(request, 'register.html', {'form': form})
+	form = RegisterModelForm(data=request.POST)
+	if form.is_valid():
+		# 验证通过，写入数据库（密码要是密文）
+		# instance = models.UserInfo.objects.create(**form.cleaned_data) # 此方法包含无用数据段，需要手动剔除。
+		form.save()  # 此方法可自动剔除无用数据。此函数可返回刚刚创建数据一个对象instance
+		return JsonResponse({'status': True, 'data': '/login/'})
+
+	return JsonResponse({'status': False, 'error': form.errors})
+```
 
 
+
+
+
+### 2. 短信登录
+
+#### 2.1 展示页面
+
+#### 2.2 点击发送短信
+
+#### 2.3 点击登录
 
 
 

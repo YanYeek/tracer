@@ -19,7 +19,15 @@ from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 
 
-class RegisterModelForm(forms.ModelForm):
+class BootStrapForm(object):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		for name, field in self.fields.items():
+			field.widget.attrs['class'] = 'form-control'
+			field.widget.attrs['placeholder'] = '请输入%s' % (field.label,)
+
+
+class RegisterModelForm(BootStrapForm, forms.ModelForm):
 	password = forms.CharField(label='密码',
 	                           min_length=8,
 	                           max_length=64,
@@ -44,12 +52,6 @@ class RegisterModelForm(forms.ModelForm):
 		model = models.UserInfo
 		# 钩子函数校验顺序与下方列表一致，字段定义顺序也要统一，否则校验时cleaned_data获取不到值。
 		fields = ['username', 'email', 'password', 'confirm_password', 'phone', 'code']
-
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		for name, field in self.fields.items():
-			field.widget.attrs['class'] = 'form-control'
-			field.widget.attrs['placeholder'] = '请输入%s' % (field.label,)
 
 	def clean_username(self):
 		username = self.cleaned_data.get('username')
@@ -118,10 +120,16 @@ class SendSmsForm(forms.Form):
 			# self.add_error('phone', '短信模板错误')
 			raise ValidationError('模板错误')
 
-		# 校验数据库中是否已有手机号
 		exists = models.UserInfo.objects.filter(phone=phone).exists()
-		if exists:
-			raise ValidationError('手机号已存在')
+
+		if tpl == "login":
+			if not exists:
+				raise ValidationError('手机号不存在,请注册。')
+
+		else:
+			# 校验数据库中是否已有手机号
+			if exists:
+				raise ValidationError('手机号已存在')
 
 		code = random.randrange(1000, 9999)
 		# 发短信
@@ -134,3 +142,40 @@ class SendSmsForm(forms.Form):
 		conn.set(phone, code, ex=60)
 
 		return phone
+
+
+class LoginSMSForm(BootStrapForm, forms.Form):
+	phone = forms.CharField(label='手机号',
+	                        validators=[RegexValidator(r'^(1[3|4|5|6|7|8|9])\d{9}$', '手机号格式错误'), ],
+	                        widget=forms.TextInput(),
+	                        )
+
+	code = forms.CharField(label='验证码', widget=forms.TextInput())
+
+	def clean_phone(self):
+		phone = self.cleaned_data.get('phone')
+		user_object = models.UserInfo.objects.filter(phone=phone).first()
+		if not user_object:
+			raise ValidationError('手机号不存在')
+
+		return user_object
+
+	def clean_code(self):
+		code = self.cleaned_data.get('code')
+		user_object = self.cleaned_data.get('phone')
+
+		# 手机号不存在，则无需校验。
+		if not user_object:
+			return code
+
+		conn = get_redis_connection()
+		redis_code = conn.get(user_object.phone)
+		if not redis_code:
+			raise ValidationError('验证码失效或未发生，请重新发送')
+
+		redis_str_code = redis_code.decode('utf-8')
+
+		if code.strip() != redis_str_code:
+			raise ValidationError('验证码错误，请重新输入')
+
+		return code
