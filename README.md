@@ -622,7 +622,7 @@ commit：路由处理
 
 
 
-#### 1.3 点击注册
+
 
 
 
@@ -703,11 +703,182 @@ commit：路由处理
 
 
 
+# day04
+
+
+
+## 内容回顾
+
+- 项目规则
+
+	- 创建项目：静态、视图、路由
+
+- Ajax
+
+	```javascript
+	$.ajax({
+		url:'...',
+	    type: "GET",
+	    data: {},
+	    dataType: "JSON",
+	    success: function(res){
+	        
+	    }
+	})
+	
+	$.ajax({
+	    url: "{% url 'register' %}",
+	    type: "POST",
+	    data: $('#regForm').serialize(),
+	    dataType: "JSON",
+	    success: function (res) {
+	        console.log(res);
+	    }
+	})
+	```
+
+- ModelForm/Form 中想要使用视图中的数据，例如：request
+
+	```
+	重写ModelForm/Form的__init__方法，把想要的数据传递，再继承原init方法。
+	```
+
+- django-redis
+
+
+
+## 今日概要
+
+- 点击注册
+- 用户登录
+	- 短信验证码登录
+	- 手机or邮箱 / 密码登录
+- 项目管理（创建&星标）
 
 
 
 
 
+## 今日详细
+
+### 1. 点击注册
+
+#### 1.1 点击收集数据&Ajax
+
+```javascript
+function bindClickSubmit() {
+    $('#btnSubmit').click(function () {
+        // 收集表单中的数据（找到每一个字段）
+        // 包含所以字段的数据 + csrf token
+
+        // 数据Ajax发送到后台
+        $.ajax({
+            url: "{% url 'register' %}",
+            type: "POST",
+            data: $('#regForm').serialize(),
+            dataType: "JSON",
+            success: function (res) {
+                console.log(res);
+            }
+        })
+    })
+}
+```
+
+
+
+
+
+#### 1.2 数据校验（每个字段）
+
+test
+
+**!字典用get方法取值提高健壮性，[‘key’]方式获取不到或报错**
+
+```python
+class RegisterModelForm(forms.ModelForm):
+	password = forms.CharField(label='密码',
+	                           min_length=8,
+	                           max_length=64,
+	                           error_messages={
+		                           'min_length': "密码长度不能少于8个字符",
+		                           'max_length': "密码长度不能多于64个字符",
+	                           },
+	                           widget=forms.PasswordInput(),
+	                           )
+
+	confirm_password = forms.CharField(label='重复密码', widget=forms.PasswordInput(
+	))
+	phone = forms.CharField(label='手机号',
+	                        validators=[RegexValidator(r'^(1[3|4|5|6|7|8|9])\d{9}$', '手机号格式错误'), ],
+	                        widget=forms.TextInput(),
+	                        )
+
+	code = forms.CharField(label='验证码',
+	                       widget=forms.TextInput())
+
+	class Meta:
+		model = models.UserInfo
+		# 钩子函数校验顺序与下方列表一致，字段定义顺序也要统一，否则校验时cleaned_data获取不到值。
+		fields = ['username', 'email', 'password', 'confirm_password', 'phone', 'code']
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		for name, field in self.fields.items():
+			field.widget.attrs['class'] = 'form-control'
+			field.widget.attrs['placeholder'] = '请输入%s' % (field.label,)
+
+	def clean_username(self):
+		username = self.cleaned_data.get('username')
+		exists = models.UserInfo.objects.filter(username=username).exists()
+		if exists:
+			raise ValidationError('用户名已存在')
+		return username
+
+	def clean_email(self):
+		email = self.cleaned_data.get('email')
+		exists = models.UserInfo.objects.filter(username=email).exists()
+		if exists:
+			raise ValidationError('邮箱已存在')
+		return email
+
+	def clean_password(self):
+		pwd = self.cleaned_data.get('password')
+		# 加密 & 返回
+		return encrypt.md5(pwd)
+
+	def clean_confirm_password(self):
+		pwd = self.cleaned_data.get('password')
+		confirm_pwd = encrypt.md5(self.cleaned_data.get('confirm_password'))
+		if pwd != confirm_pwd:
+			raise ValidationError('两次密码不一致')
+		return confirm_pwd
+
+	def clean_phone(self):
+		phone = self.cleaned_data.get('phone')
+		exists = models.UserInfo.objects.filter(phone=phone).exists()
+		if exists:
+			raise ValidationError('手机号已注册')
+		return phone
+
+	def clean_code(self):
+		code = self.cleaned_data.get('code')
+		phone = self.cleaned_data.get('phone')
+		conn = get_redis_connection()
+		redis_code = conn.get(str(phone))
+		if not redis_code:
+			raise ValidationError('验证码失效或未发生，请重新发送')
+
+		redis_str_code = redis_code.decode('utf-8')
+		if code.strip() != redis_str_code:
+			raise ValidationError('验证码错误，请重新输入')
+
+		return code
+```
+
+
+
+#### 1.3 谢图数据库
 
 
 

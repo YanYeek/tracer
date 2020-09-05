@@ -22,7 +22,7 @@
     <div class="account">
 
         <div class="title">用户注册</div>
-        <form id="form" method="POST" novalidate>
+        <form id="regForm" method="POST" novalidate>
             {% csrf_token %}
             {% for field in form %}
                 {% if field.name == 'code' %}
@@ -63,7 +63,35 @@
         // 页面框架加载完成后字段执行的函数
         $(function () {
             bindClickBtnSms();
+            bindClickSubmit();
         })
+
+        /*
+        点击提交（注册）
+        */
+        function bindClickSubmit() {
+            $('#btnSubmit').click(function () {
+                $('.error-msg').empty();
+                // 收集表单中的数据（找到每一个字段）
+                // 包含所以字段的数据 + csrf token
+                // 数据Ajax发送到后台
+                $.ajax({
+                    url: "{% url 'register' %}",
+                    type: "POST",
+                    data: $('#regForm').serialize(),
+                    dataType: "JSON",
+                    success: function (res) {
+                        if (res.status) {
+                            location.href = res.data
+                        } else {
+                            $.each(res.error, function (key, value) {
+                                $("#id_" + key).next().text(value[0]);
+                            })
+                        }
+                    }
+                })
+            })
+        }
 
         /*点击获取验证码的按钮绑定事件*/
         function bindClickBtnSms() {
