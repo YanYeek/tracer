@@ -74,13 +74,16 @@ class Project(models.Model):
 
 	join_count = models.SmallIntegerField(verbose_name='参与人数', default=1)
 	creator = models.ForeignKey(verbose_name='创建者', to='UserInfo')
-	cerate_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+	create_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+	# 查询：可以省事；
+	# 无法完成：增加、修改、删除
+	# project_user = models.ManyToManyField(to='UserInfo', through='ProjectUser', through_fields=('project', 'user'))
 
 
 class ProjectUser(models.Model):
 	"""项目参与者"""
-	user = models.ForeignKey(verbose_name='用户', to='UserInfo', related_name='projects')
 	project = models.ForeignKey(verbose_name='项目', to='Project')
+	user = models.ForeignKey(verbose_name='用户', to='UserInfo', related_name='projects')
 
 	invitee = models.ForeignKey(verbose_name='邀请者', to='UserInfo', related_name='invites', null=True, blank=True)
 

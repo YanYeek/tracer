@@ -14,6 +14,8 @@ from utils.image_code import check_code
 from io import BytesIO
 from django.db.models import Q
 from web import models
+import uuid
+import datetime
 
 
 def register(request):
@@ -29,7 +31,21 @@ def register(request):
 	if form.is_valid():
 		# 验证通过，写入数据库（密码要是密文）
 		# instance = models.UserInfo.objects.create(**form.cleaned_data) # 此方法包含无用数据段，需要手动剔除。
-		form.save()  # 此方法可自动剔除无用数据。此函数可返回刚刚创建数据一个对象instance
+		instance = form.save()  # 此方法可自动剔除无用数据。此函数可返回刚刚创建数据一个对象instance
+
+		# 创建交易记录
+		policy_object = models.PricePolicy.objects.filter(category=1, title='个人免费版', ).first()
+		models.Transaction.objects.create(
+			status=2,
+			order=str(uuid.uuid4()),
+			user=instance,
+			price_policy=policy_object,
+			count=0,
+			price=0,
+			create_datetime=datetime.datetime.now(),
+
+
+		)
 		return JsonResponse({'status': True, 'data': '/login/'})
 
 	return JsonResponse({'status': False, 'error': form.errors})

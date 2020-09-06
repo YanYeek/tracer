@@ -1157,15 +1157,48 @@ models.UserInfo.objects.create(username='Yan', email='yan@qq.com', phone='131111
 
 ## 今日详细
 
-### 1. 表结构
+### 1.表结构
+
+### 2.离线脚本
+
+```python
+import offline_scripts_base
+
+from web import models
+
+
+def run():
+	exists = models.PricePolicy.objects.filter(category=1, title='个人免费版', ).exists()
+	if not exists:
+		models.PricePolicy.objects.create(
+			category=1,
+			title='个人免费版',
+			price=0,
+			project_num=3,
+			project_member=2,
+			project_space=20,
+			project_size=5,
+		)
+```
 
 
 
+### 3.用户注册【改】
+
+- 以前：创建用户
+- 现在：用户 & 交易记录
 
 
 
+### 4.添加项目
 
+#### 4.1 项目列表母版 + 样式
 
+#### 4.2 添加
+
+#### 4.3 查看项目列表
+
+#### 4.4 星标
 
 
 

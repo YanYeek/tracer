@@ -9,6 +9,7 @@
 from django.conf.urls import url
 from web.views import account
 from web.views import home
+from web.views import project
 
 urlpatterns = [
 	url(r'^register/$', account.register, name='register'),
@@ -19,6 +20,8 @@ urlpatterns = [
 
 	url(r'^send/sms/$', account.send_sms, name='send_sms'),
 
-
 	url(r'^index/$', home.index, name='index'),
+
+	# 项目管理
+	url(r'^project/list/$', project.project_list, name='project_list'),
 ]
