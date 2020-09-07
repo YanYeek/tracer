@@ -33,7 +33,7 @@ def register(request):
 		# instance = models.UserInfo.objects.create(**form.cleaned_data) # 此方法包含无用数据段，需要手动剔除。
 		instance = form.save()  # 此方法可自动剔除无用数据。此函数可返回刚刚创建数据一个对象instance
 
-		# 创建交易记录
+		# 方式一 创建交易记录
 		policy_object = models.PricePolicy.objects.filter(category=1, title='个人免费版', ).first()
 		models.Transaction.objects.create(
 			status=2,
@@ -46,6 +46,8 @@ def register(request):
 
 
 		)
+
+		# 方式二
 		return JsonResponse({'status': True, 'data': '/login/'})
 
 	return JsonResponse({'status': False, 'error': form.errors})
