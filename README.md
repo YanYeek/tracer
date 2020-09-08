@@ -1203,7 +1203,7 @@ def run():
 
 #### 4.2 添加
 
-任务：选择颜色
+任务：选择颜色 查看项目列表 星标
 
 ```
 modelForm-select -> radio
@@ -1212,9 +1212,337 @@ modelForm-select -> radio
 
 
 
-#### 4.3 查看项目列表
 
-#### 4.4 星标
+
+# day07
+
+## 今日概要
+
+- 展示项目
+- 星标项目
+- 添加项目：颜色选择
+- 项目切换 & 项目管理菜单处置
+- wiki管理
+
+
+
+## 今日详细
+
+### 1.展示项目
+
+#### 1.1 数据
+
+![image-20200907174240035](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200907174240035.png)
+
+```
+1. 从数据库中获取两部分数据
+	我创建的所有项目：已星标、未星标
+	我参与的所有项目：已星标、未星标
+2. 提前已星标
+	循环 = 循环[我创建的所有项目] + [我参与的所有项目] 吧已星标的数据提取
+	
+得到三个列表：星标、创建、参与
+```
+
+#### 1.2 样式
+
+```html
+<style>
+        .project {
+            margin-top: 10px;
+        }
+
+        .panel-body {
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            justify-content: left;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .panel-body > .item {
+            border-radius: 6px;
+            width: 228px;
+            border: 1px solid #dddddd;
+            margin: 20px 10px;
+
+        }
+
+        .panel-body > .item:hover {
+            border: 1px solid #f0ad4e;
+        }
+
+        .panel-body > .item > .title {
+            height: 104px;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            font-size: 15px;
+            text-decoration: none;
+        }
+
+        .panel-body > .item > .info {
+            padding: 10px 10px;
+
+            display: flex;
+            justify-content: space-between;
+
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+            color: #8c8c8c;
+
+        }
+
+        .panel-body > .item > .info a {
+            text-decoration: none;
+        }
+
+        .panel-body > .item > .info .fa-star {
+            font-size: 18px;
+        }
+
+        .color-radio label {
+            margin-left: 0;
+            padding-left: 0;
+        }
+
+        .color-radio input[type="radio"] {
+            display: none;
+        }
+
+        .color-radio input[type="radio"] + .cycle {
+            display: inline-block;
+            height: 25px;
+            width: 25px;
+            border-radius: 50%;
+            border: 2px solid #dddddd;
+        }
+
+        .color-radio input[type="radio"]:checked + .cycle {
+            border: 2px solid black;
+        }
+    </style>
+```
+
+
+
+### 2.星标项目（去除星标）
+
+
+
+#### 2.1 星标
+
+```
+我创建的项目：projectstar = True
+我参与的项目：projectUser的star = True
+```
+
+
+
+#### 2.2 移除星标
+
+```
+我创建的项目：projectstar = False
+我参与的项目：projectUser的star = False
+```
+
+
+
+
+
+### 3.选择颜色
+
+#### 3.1 部分样式应用BootStrap
+
+```python
+class BootStrapForm(object):
+	bootstrap_class_exclude = []
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		for name, field in self.fields.items():
+			if name in self.bootstrap_class_exclude:
+				continue
+			field.widget.attrs['class'] = 'form-control'
+			field.widget.attrs['placeholder'] = '请输入%s' % (field.label,)
+```
+
+```python
+class ProjectModelForm(BootStrapForm, forms.ModelForm):
+	# desc = forms.CharField(widget=forms.Textarea)
+	bootstrap_class_exclude = ['color']
+    class Meta:
+        model = models.Project
+        fields = ['name', 'color', 'desc']
+        widgets = {
+            'desc': forms.Textarea,
+            'color': ColorRadioSelect(attrs={"class": "color-radio"}),
+        }
+```
+
+#### 3.2 定制ModelForm的插件
+
+```python
+class ProjectModelForm(BootStrapForm, forms.ModelForm):
+
+	class Meta:
+		model = models.Project
+		fields = "__all__"
+		widgets = {
+			'desc': forms.Textarea,
+			'color': ColorRadioSelect(attrs={"class": "color-radio"}),
+		}
+```
+
+```python
+from django.forms import RadioSelect
+
+
+class ColorRadioSelect(RadioSelect):
+	# template_name = 'django/forms/widgets/radio.html'
+	# option_template_name = 'django/forms/widgets/radio_option.html'
+
+	template_name = 'widgets/color_radio/radio.html'
+	option_template_name = 'widgets/color_radio/radio_option.html'
+```
+
+```html
+{% with id=widget.attrs.id %}
+    <div{% if id %} id="{{ id }}"{% endif %}{% if widget.attrs.class %} class="{{ widget.attrs.class }}"{% endif %}>
+        {% for group, options, index in widget.optgroups %}
+            {% for option in options %}
+                <label {% if option.attrs.id %} for="{{ option.attrs.id }}"{% endif %} >
+                    {% include option.template_name with widget=option %}
+                </label>
+            {% endfor %}
+        {% endfor %}
+    </div>
+{% endwith %}
+```
+
+```html
+{% include "django/forms/widgets/input.html" %}
+<span class="cycle" style="background-color:{{ option.label }}"></span>
+```
+
+
+
+#### 3.3 项目选择颜色
+
+3.1、3.2知识点的应用 + 前端样式的编写
+
+
+
+### 4.切换菜单
+
+```
+1. 数据库获取
+	我创建的：
+	我参与的：
+2. 循环显示
+
+3. 当前页面需要显示/其他页面也需要显示 [inclusion_tag]
+```
+
+
+
+### 5.项目管理
+
+![image-20200908112449731](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200908112449731.png)
+
+
+
+
+
+```
+/manage/项目ID/dashboared
+/manage/项目ID/issues
+/manage/项目ID/statistics
+/manage/项目ID/file
+/manage/项目ID/wiki
+/manage/项目ID/setting
+```
+
+
+
+#### 5.1 进入项目展示菜单
+
+
+
+```
+- 进入项目
+- 展示菜单
+```
+
+##### 5.1.1 是否进入项目【中间件】
+
+判断URL是否以manage开头？
+
+project-id 是我创建的 or 我参与的？
+
+
+
+##### 5.1.2 显示菜单
+
+依赖：是否已经进入项目？
+
+```html
+判断：是否已经进入项目？
+<ul class="nav navbar-nav">
+    <li><a href="#">概览</a></li>
+    <li><a href="#">wiki</a></li>
+    <li><a href="#">配置</a></li>
+</ul>
+```
+
+##### 5.1.3 修复bug
+
+bootstrap样式ul与li嵌套关系错误
+
+##### 5.1.4 默认选择菜单
+
+
+
+
+
+## 总结
+
+1. 项目实现思路
+2. 星标/取消星标
+3. inclusion_tag实现项目切换
+4. 3项目菜单
+	- 中间件 process_view
+	- 默认选中：inclusion_tag
+	- 路由分发
+		- include(“xxx.url”)
+		- include([“xxx.url”, “sdf”, “afaf”])
+5. 颜色选择：源码 + 扩展【实现】……
+
+
+
+## 作业
+
+![image-20200908141934319](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200908141934319.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

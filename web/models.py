@@ -85,7 +85,7 @@ class Project(models.Model):
 class ProjectUser(models.Model):
 	"""项目参与者"""
 	project = models.ForeignKey(verbose_name='项目', to='Project')
-	user = models.ForeignKey(verbose_name='用户', to='UserInfo', related_name='projects')
+	user = models.ForeignKey(verbose_name='用户', to='UserInfo')
 
 	invitee = models.ForeignKey(verbose_name='邀请者', to='UserInfo', related_name='invites', null=True, blank=True)
 

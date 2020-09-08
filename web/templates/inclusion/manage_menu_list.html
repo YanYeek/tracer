@@ -1,0 +1,4 @@
+{#获取当前请求URL并和所有的菜单进行比对，如果前缀相等，则加active样式#}
+{% for item in data_list %}
+    <li{% if item.class %} class="{{ item.class }}"{% endif %} ><a href="{{ item.url }}">{{ item.title }}</a></li>
+{% endfor %}
