@@ -1505,6 +1505,8 @@ bootstrap样式ul与li嵌套关系错误
 
 ##### 5.1.4 默认选择菜单
 
+![image-20200908162114488](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200908162114488.png)
+
 
 
 
@@ -1526,7 +1528,32 @@ bootstrap样式ul与li嵌套关系错误
 
 ## 作业
 
-![image-20200908141934319](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200908141934319.png)
+<img src="https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200908141934319.png" alt="image-20200908141934319" style="zoom:50%;" />
+
+
+
+
+
+# day08 Wiki
+
+
+
+## 今日概要
+
+- 表结构设计
+- 快速开发
+- 应用markdown组件
+- 腾讯COS做上传
+
+
+
+
+
+## 今日详细
+
+### 1.表结构设计
+
+![image-20200908160947851](https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200908160947851.png)
 
 
 
@@ -1534,11 +1561,13 @@ bootstrap样式ul与li嵌套关系错误
 
 
 
+| ID   | 标题   | 内容           | 项目ID | 父ID |
+| ---- | ------ | -------------- | ------ | ---- |
+| 1    | test   | 山豆根发射点发 | 1      | null |
+| 2    | 张家界 | 事故发生规划   | 1      | null |
+| 3    | fh     | 儿童火热拖后腿 | 1      | 1    |
 
-
-
-
-
+父ID字段使用自关联，划分归属层级
 
 
 
