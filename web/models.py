@@ -103,6 +103,7 @@ class Wiki(models.Model):
 	project = models.ForeignKey(verbose_name='项目', to='Project')
 	title = models.CharField(verbose_name='标题', max_length=32)
 	content = models.TextField(verbose_name='内容')
+	depth = models.IntegerField(verbose_name='深度', default=1)
 	# 自关联,关联时加别名，防止反向与正向查找出问题
 	parent = models.ForeignKey(verbose_name='父文章', to='Wiki', null=True, blank=True,
 	                           related_name='children')  # 也可以to=self 表示关联自己

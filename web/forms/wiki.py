@@ -15,7 +15,7 @@ from web.forms.bootstrap import BootStrapForm
 class WikiModelForm(BootStrapForm, forms.ModelForm):
 	class Meta:
 		model = models.Wiki
-		exclude = ['project', ]
+		exclude = ['project', 'depth', ]
 
 	def __init__(self, request, *args, **kwargs):
 		super().__init__(*args, **kwargs)

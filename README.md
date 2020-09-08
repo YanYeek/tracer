@@ -1561,11 +1561,11 @@ bootstrap样式ul与li嵌套关系错误
 
 
 
-| ID   | 标题   | 内容           | 项目ID | 父ID |
-| ---- | ------ | -------------- | ------ | ---- |
-| 1    | test   | 山豆根发射点发 | 1      | null |
-| 2    | 张家界 | 事故发生规划   | 1      | null |
-| 3    | fh     | 儿童火热拖后腿 | 1      | 1    |
+| ID   | 标题   | 内容           | 项目ID | 父ID | depth |
+| ---- | ------ | -------------- | ------ | ---- | ----- |
+| 1    | test   | 山豆根发射点发 | 1      | null | 1     |
+| 2    | 张家界 | 事故发生规划   | 1      | null | 1     |
+| 3    | fh     | 儿童火热拖后腿 | 1      | 1    | 2     |
 
 父ID字段使用自关联，划分归属层级
 
@@ -1576,14 +1576,80 @@ bootstrap样式ul与li嵌套关系错误
 #### 2.1 wiki首页展示
 
 - 首页：已完成
-- 多级目录：todo
+
+- 多级目录思路：
+
+	```
+	1级：
+		找到当前项目的所有文章的name
+		页面循环展示
+	多级：
+		去数据库获取每一级的数据
+	```
+
+	```
+	模板渲染：
+		- 数据库获取数据要有层级的划分
+		讲数据构造
+		[
+			{
+				id:1,
+				title:'lol',
+				children: {
+					id:xxx,
+					name:'xxxx'
+				}
+			}
+		]
+	缺点：
+		- 写代码费劲
+		- 效率低
+	```
+
+	```python
+	后端 + 前端完成Ajax+ID选择器
+		- 前端：打开页面之后。发送ajax请求获取所有的文档标题信息。
+		- 后台：获取所有的文章信息
+			queryset = model.wiki.objects.filter(project_id=2).values_list('id','title', 'parent_id')
+			[
+				{'id':1,'title':'为人体','parent_id': None},
+				{'id':2,'title':'温热','parent_id': None},
+				{'id':3,'title':'是的','parent_id': None},
+				{'id':4,'title':'不是','parent_id': 3},
+			]
+	        直接返回给前端的ajax
+	    - ajax的回调函数succsee中获取到res.data , 并循环
+	    	$.wach(res.data,funcion(index,item){
+	            if(item.parent_id){
+	                
+	            }else{
+	                
+	            }
+	        })
+	<ul>
+		<li id-"1">万元
+	    	<ul>
+	        	<li id-"1">张浩</li>
+	        </ul>
+	    </li>
+	</ul>
+	        
+	```
+
+多级目录存在两个问题：
+
+- 父目录要提前出现：排序 + 字段（depth）
+
+- 点击目录查看文章详细
+
+	
 
 
 
 #### 2.2 添加文章
 
 - 目前已经完成
-- 但bug
+- BUG：已修复S
 
 #### 2.3 预览文章
 

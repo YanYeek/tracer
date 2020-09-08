@@ -26,6 +26,15 @@
             flex-direction: row;
             justify-content: space-between;
         }
+
+        .title-list ul {
+            padding-left: 15px;
+        }
+
+        .title-list ul a {
+            display: block;
+            padding: 5px 0;
+        }
     </style>
 {% endblock %}
 
@@ -47,19 +56,61 @@
             </div>
             <div class="panel-body">
                 <div class="col-sm-3 title-list">
-                    <div>目录</div>
-
+                    <ul id="catalog">
+                    </ul>
                 </div>
                 <div class="col-sm-9 content">
-                    <div style="text-align: center; margin-top: 50px">
-                        <h4>《{{ request.tracer.project.name }}》Wiki文档库</h4>
-                        <a href="{% url 'wiki_add' project_id=request.tracer.project.id %}">
-                            <i class="fa fa-plus-circle" aria-hidden="true"></i>新建文档
-                        </a>
-                    </div>
+                    {% if wiki_object %}
+                        {{ wiki_object.content }}
+                    {% else %}
+                        <div style="text-align: center; margin-top: 50px">
+                            <h4>《{{ request.tracer.project.name }}》Wiki文档库</h4>
+                            <a href="{% url 'wiki_add' project_id=request.tracer.project.id %}">
+                                <i class="fa fa-plus-circle" aria-hidden="true"></i>新建文档
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
 
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        // http://127.0.0.1:8000/manage/3/wiki/detail/
+        var WIKI_DETAIL_URL = "{% url 'wiki' project_id=request.tracer.project.id %}"
+        $(function () {
+            initCatalog();
+
+        })
+
+
+        function initCatalog() {
+            $.ajax({
+                url: "{% url 'wiki_catalog' project_id=request.tracer.project.id %}",
+                type: "GET",
+                dataType: "JSON",
+                success: function (res) {
+                    if (res.status) {
+                        $.each(res.data, function (index, item) {
+                            var href = WIKI_DETAIL_URL + "?wiki_id=" + item.id
+                            var li = $("<li>").attr("id", "id_" + item.id).append($("<a>").text(item.title).attr("href", href)).append("<ul>");
+                            if (!item.parent_id) {
+                                // 添加到catalog中
+                                $("#catalog").append(li)
+                            } else {
+                                // 添加到父级catalog下
+                                $("#id_" + item.parent_id).children('ul').append(li)
+                            }
+                        })
+                    } else {
+                        alert("初始化目录失败");
+                    }
+                }
+            })
+        }
+
+    </script>
 {% endblock %}
