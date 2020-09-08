@@ -51,12 +51,19 @@
 
                 </div>
                 <div class="col-sm-9 content">
-                    <div style="text-align: center; margin-top: 50px">
-                        <h4>《{{ request.tracer.project.name }}》Wiki文档库</h4>
-                        <a href="{% url 'wiki_add' project_id=request.tracer.project.id %}">
-                            <i class="fa fa-plus-circle" aria-hidden="true"></i>新建文档
-                        </a>
-                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                <span class="error-msg"></span>
+                            </div>
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-primary">提 交</button>
+                    </form>
                 </div>
 
             </div>

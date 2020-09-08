@@ -106,3 +106,6 @@ class Wiki(models.Model):
 	# 自关联,关联时加别名，防止反向与正向查找出问题
 	parent = models.ForeignKey(verbose_name='父文章', to='Wiki', null=True, blank=True,
 	                           related_name='children')  # 也可以to=self 表示关联自己
+
+	def __str__(self):
+		return self.title
