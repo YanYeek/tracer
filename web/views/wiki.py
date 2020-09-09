@@ -31,7 +31,7 @@ def wiki_add(request, project_id):
 	"""Wiki添加"""
 	if request.method == "GET":
 		form = WikiModelForm(request)
-		return render(request, 'wiki_add.html', {'form': form})
+		return render(request, 'wiki_form.html', {'form': form})
 	form = WikiModelForm(request, data=request.POST)
 	if form.is_valid():
 		# 判断用户是否选择父文章，如选择就在父文章的深度上加1。
@@ -43,7 +43,7 @@ def wiki_add(request, project_id):
 		form.save()
 		url = reverse('wiki', kwargs={'project_id': project_id})
 		return redirect(url)
-	return render(request, 'wiki_add.html', {'form': form})
+	return render(request, 'wiki_form.html', {'form': form})
 
 
 def wiki_catalog(request, project_id):
@@ -73,3 +73,29 @@ def wiki_delete(request, project_id, wiki_id):
 	models.Wiki.objects.filter(project_id=project_id, id=wiki_id).delete()
 	url = reverse('wiki', kwargs={'project_id': project_id})
 	return redirect(url)
+
+
+def wiki_edit(request, project_id, wiki_id):
+	"""编辑Wiki"""
+	wiki_object = models.Wiki.objects.filter(project_id=project_id, id=wiki_id).first()
+	if not wiki_object:
+		url = reverse('wiki', kwargs={'project_id': project_id})
+		return redirect(url)
+
+	if request.method == "GET":
+		form = WikiModelForm(request, instance=wiki_object)
+		return render(request, 'wiki_form.html', {'form': form})
+	form = WikiModelForm(request, data=request.POST, instance=wiki_object)
+	if form.is_valid():
+		# 判断用户是否选择父文章，如选择就在父文章的深度上加1。
+		if form.instance.parent:
+			form.instance.depth = form.instance.parent.depth + 1
+		else:
+			form.instance.depth = 1
+		form.instance.project = request.tracer.project
+		form.save()
+		url = reverse('wiki', kwargs={'project_id': project_id})
+		preview_url = f"{url}?wiki_id={wiki_id}"
+		return redirect(preview_url)
+
+	return render(request, 'wiki_form.html', {'form': form})
