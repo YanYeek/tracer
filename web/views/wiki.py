@@ -66,3 +66,10 @@ def wiki_detail(request, project_id):
 		/detail?wiki_id=3
 	"""
 	return HttpResponse("查看文章详细")
+
+
+def wiki_delete(request, project_id, wiki_id):
+	"""删除wiki"""
+	models.Wiki.objects.filter(project_id=project_id, id=wiki_id).delete()
+	url = reverse('wiki', kwargs={'project_id': project_id})
+	return redirect(url)

@@ -52,6 +52,16 @@
                        href="{% url 'wiki_add' project_id=request.tracer.project.id %}">
                         <i class="fa fa-plus-circle" aria-hidden="true"></i>新建
                     </a>
+                    {% if wiki_object %}
+                        <a type="button" class="btn btn-primary btn-xs"
+                           href="{% url 'wiki_add' project_id=request.tracer.project.id %}">
+                            <i class="fa fa-edit" aria-hidden="true"></i>编辑
+                        </a>
+                        <a type="button" class="btn btn-danger btn-xs"
+                           href="{% url 'wiki_delete' project_id=request.tracer.project.id wiki_id=wiki_object.id %}">
+                            <i class="fa fa-trash-o" aria-hidden="true"></i>删除
+                        </a>
+                    {% endif %}
                 </div>
             </div>
             <div class="panel-body">
