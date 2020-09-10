@@ -80,6 +80,9 @@ class Project(models.Model):
 	creator = models.ForeignKey(verbose_name='创建者', to='UserInfo')
 	create_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
 
+	bucket = models.CharField(verbose_name='cos桶', max_length=128)
+	region = models.CharField(verbose_name='cos区域', max_length=32)
+
 
 # 查询：可以省事；
 # 无法完成：增加、修改、删除

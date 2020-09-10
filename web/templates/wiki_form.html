@@ -1,6 +1,8 @@
 {% extends 'layout/manage.html' %}
+{% load static %}
 
 {% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.min.css' %}">
     <style>
         .panel-default {
             margin-top: 10px;
@@ -35,6 +37,10 @@
             display: block;
             padding: 5px 0;
         }
+
+        .editormd-fullscreen {
+            z-index: 1001;
+        }
     </style>
 {% endblock %}
 
@@ -64,12 +70,18 @@
                     <form method="post">
                         {% csrf_token %}
                         {% for field in form %}
-
-                            <div class="form-group">
-                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {{ field }}
+                            {% if field.name == "content" %}
+                                <div id="editor">
+                                    {{ field }}
+                                </div>
                                 <span class="error-msg"></span>
-                            </div>
+                            {% else %}
+                                <div class="form-group">
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    <span class="error-msg"></span>
+                                </div>
+                            {% endif %}
                         {% endfor %}
 
                         <button type="submit" class="btn btn-primary">提 交</button>
@@ -81,12 +93,14 @@
     </div>
 {% endblock %}
 {% block js %}
+    <script src="{% static 'plugin/editor-md/editormd.min.js' %}"></script>
     <script>
         // http://127.0.0.1:8000/manage/3/wiki/detail/
         var WIKI_DETAIL_URL = "{% url 'wiki' project_id=request.tracer.project.id %}"
+        var WIKI_UPLOAD_URL = "{% url 'wiki_upload' project_id=request.tracer.project.id %}"
         $(function () {
             initCatalog();
-
+            initEditorMd();
         })
 
 
@@ -97,6 +111,7 @@
                 dataType: "JSON",
                 success: function (res) {
                     if (res.status) {
+                        console.log(res.data)
                         $.each(res.data, function (index, item) {
                             var href = WIKI_DETAIL_URL + "?wiki_id=" + item.id
                             var li = $("<li>").attr("id", "id_" + item.id).append($("<a>").text(item.title).attr("href", href)).append("<ul>");
@@ -115,5 +130,18 @@
             })
         }
 
+        /*
+        初始化markdown编辑器 （textarea转换为markdown编辑器）
+         */
+        function initEditorMd() {
+            editormd('editor', {
+                placeholder: "请输入内容",
+                height: 500,
+                path: "{% static 'plugin/editor-md/lib/' %}",
+                imageUpload: true,
+                imageFormats: ["jpg", "jpeg", "png", "gif"],
+                imageUploadURL: WIKI_UPLOAD_URL,
+            });
+        }
     </script>
 {% endblock %}

@@ -1673,35 +1673,253 @@ bootstrap样式ul与li嵌套关系错误
 
 ### 1.Wiki删除
 
+### 2.Wiki编辑
+
+### 3.markdown编辑器
+
+- 富文本编辑器，ckeditor。
+- markdown，mdeditor。
+
+项目中想要应用markdown编辑器
+
+- 添加和编辑的页面中 textarea 输入框->转换未markdown编辑器
+
+	```html
+	1. textarea 输入框通过div包裹设置id以便于查找
+		<div id="editor">{{ field }}</div>
+	2. 应用js和css
+	    <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.min.css' %}">
+	    <script src="{% static 'plugin/editor-md/editormd.min.js' %}"></script>
+	3. 初始化
+	    <script>
+	        $(function () {
+	                initEditorMd();
+	            })
+	        function initEditorMd() {
+	                editormd('editor', {
+	                    placeholder: "请输入内容",
+	                    height: 500,
+	                    path: "{% static 'plugin/editor-md/lib/' %}",
+	                });
+	            }
+	    </script>
+	4. 全屏样式
+	    .editormd-fullscreen{
+	                z-index: 1001;
+	            }
+	```
+
+	[](https://www.mdeditor.com/)
+
+	[](https://www.github.com/pandao/editor.md)
+
+	[](https://pandao.github.io/editor.md/)
+
+- 预览页面按照markdown格式显示
+
+	```html
+	1. 内容区域
+	    <div id="previewMarkdown">
+	        <textarea>{{ wiki_object.content }}</textarea>
+	    </div>
+	1. 引入css和js
+		<link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.preview.min.css' %}">
+	
+		<script src="{% static 'plugin/editor-md/editormd.min.js' %}"></script>
+	    <script src="{% static 'plugin/editor-md/lib/marked.min.js' %}"></script>
+	    <script src="{% static 'plugin/editor-md/lib/prettify.min.js' %}"></script>
+	    <script src="{% static 'plugin/editor-md/lib/raphael.min.js' %}"></script>
+	    <script src="{% static 'plugin/editor-md/lib/underscore.min.js' %}"></script>
+	    <script src="{% static 'plugin/editor-md/lib/sequence-diagram.min.js' %}"></script>
+	    <script src="{% static 'plugin/editor-md/lib/flowchart.min.js' %}"></script>
+	    <script src="{% static 'plugin/editor-md/lib/jquery.flowchart.min.js' %}"></script>
+	3. 初始化
+	     <script>
+	        $(function () {
+	                initPreviewMd();
+	            })
+	        function initPreviewMd() {
+	                editormd.markdownToHTML('previewMarkdown', {
+	                    htmlDecode: "style,script,iframe",
+	                });
+	            }
+	     </script>
+	```
+
+	
+
+总结：编辑器实现markdown编辑和预览。
+
+差：markdown组件进行上传图片功能
+
+
+
+### 4.腾讯对象存储
+
+![image-20200909152041004](C:\Users\YanYeek\AppData\Roaming\Typora\typora-user-images\image-20200909152041004.png)
+
+
+
+#### 4.1 开通腾讯对象服务
+
+
+
+#### 4.2 后台创建存储桶
+
+<img src="https://raw.githubusercontent.com/YanYeek/FigureBed/master/images/image-20200909153031565.png" alt="image-20200909153031565" style="zoom: 67%;" />
+
+
+
+#### 4.3 python实现上传文件
+
+1. 安装
+
+```
+pip install -U cos-python-sdk-v5
+```
+
+2. 初始化
+
+	```python
+	# -*- coding=utf-8
+	# appid 已在配置中移除,请在参数 Bucket 中带上 appid。Bucket 由 BucketName-APPID 组成
+	# 1. 设置用户配置, 包括 secretId，secretKey 以及 Region
+	from qcloud_cos import CosConfig
+	from qcloud_cos import CosS3Client
+	import sys
+	import logging
+	
+	logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+	
+	secret_id = 'COS_SECRETID'      # 替换为用户的 secretId
+	secret_key = 'COS_SECRETKEY'      # 替换为用户的 secretKey
+	region = 'ap-chengdu'     # 替换为用户的 Region
+	
+	token = None                # 使用临时密钥需要传入 Token，默认为空，可不填
+	scheme = 'https'            # 指定使用 http/https 协议来访问 COS，默认为 https，可不填
+	config = CosConfig(Region=region, SecretId=secret_id, SecretKey=secret_key, Token=token, Scheme=scheme)
+	# 2. 获取客户端对象
+	client = CosS3Client(config)
+	# 参照下文的描述。或者参照 Demo 程序，详见 https://github.com/tencentyun/cos-python-sdk-v5/blob/master/qcloud_cos/demo.py
+	```
+
+	
+
+	```python
+	# 创建存储桶
+	response = client.create_bucket(
+	    Bucket='examplebucket-1250000000'
+	)
+	```
+
+	
+
+	
+
+	```python
+	#### 高级上传接口（推荐）
+	# 根据文件大小自动选择简单上传或分块上传，分块上传具备断点续传功能。
+	response = client.upload_file(
+	    Bucket='picture-1302428193',
+	    LocalFilePath='local.txt',
+	    Key='picture.jpg',
+	    PartSize=1,
+	    MAXThread=10,
+	    EnableMD5=False
+	)
+	print(response['ETag'])
+	```
+
+	
+
+	
+
+	示例代码
+
+	```python
+	from scripts import offline_scripts_base
+	from qcloud_cos import CosConfig
+	from qcloud_cos import CosS3Client
+	from django.conf import settings
+	import sys
+	
+	secret_id = settings.TENCENT_SECRET_ID  # 替换为用户的 secretId
+	secret_key = settings.TENCENT_SECRET_KEY  # 替换为用户的 secretKey
+	region = 'ap-chengdu'  # 替换为用户的 Region
+	
+	config = CosConfig(Region=region, SecretId=secret_id, SecretKey=secret_key)
+	# 2. 获取客户端对象
+	client = CosS3Client(config)
+	# 参照下文的描述。或者参照 Demo 程序，详见 https://github.com/tencentyun/cos-python-sdk-v5/blob/master/qcloud_cos/demo.py
+	
+	response = client.upload_file(
+		Bucket='picture-1302428193',
+		LocalFilePath='picture.jpg',  # 本地文件路径
+		Key='elephant.jpg',  # 上传到桶之后的名字
+	)
+	print(response['ETag'])
+	```
+
+	
+
+### 5.项目中集成COS
+
+希望我们的项目在用到的图片可以放在COS中，防止我们的服务处理图片时压力过大。
+
+#### 5.1　创建项目时同时创建一个桶
+
+```python
+	if form.is_valid():
+		# 1. 为项目创建一个桶
+		name = form.cleaned_data.get('name')
+		bucket = "{}-{}-{}-1302428193".format(name, request.tracer.user.phone, str(int(time.time())))
+		region = "ap-chengdu"
+		create_bucket(bucket=bucket, region=region)
+
+		# 把桶和区域写入数据库
+
+		# 验证通过: 项目名、颜色、描述 + creator谁创建的项目
+		form.instance.bucket = bucket
+		form.instance.region = region
+		form.instance.creator = request.tracer.user
+		# 创建项目
+		form.save()
+		return JsonResponse({'status': True})
+```
+
+```python
+from qcloud_cos import CosConfig
+from qcloud_cos import CosS3Client
+from django.conf import settings
+import sys
+
+
+def create_bucket(bucket, region='ap-chengdu'):
+	"""
+	创建桶
+	:param bucket：桶名称
+	:param region: 区域
+	:return:
+	"""
+	config = CosConfig(Region=region, SecretId=settings.TENCENT_SECRET_ID, SecretKey=settings.TENCENT_SECRET_KEY)
+	# 2. 获取客户端对象
+	client = CosS3Client(config)
+	# 参照下文的描述。或者参照 Demo 程序，详见 https://github.com/tencentyun/cos-python-sdk-v5/blob/master/qcloud_cos/demo.py
+
+	client.create_bucket(
+		Bucket=bucket,
+		ACL="public-read"  # private / public-read /public-read-write
+	)
+```
 
 
 
 
 
+#### 5.2　markdown上传图片到cos
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- cos上传文件: 本地文件; 接收markdown上传的文件在进行上传。
+- markdown上传图片。
 
 
 

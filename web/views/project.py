@@ -6,10 +6,14 @@
 @time: 2020/9/7 2:00
 @desc:
 '''
+import time
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
+
 from web.forms.project import ProjectModelForm
 from web import models
+
+from utils.tencent.cos import create_bucket
 
 
 def project_list(request):
@@ -47,7 +51,17 @@ def project_list(request):
 	# POST，对话框的ajax添加项目。
 	form = ProjectModelForm(request, data=request.POST)
 	if form.is_valid():
+		# 1. 为项目创建一个桶
+		name = form.cleaned_data.get('name')
+		bucket = "{}-{}-{}-1302428193".format(name, request.tracer.user.phone, str(int(time.time())))
+		region = "ap-chengdu"
+		create_bucket(bucket=bucket, region=region)
+
+		# 把桶和区域写入数据库
+
 		# 验证通过: 项目名、颜色、描述 + creator谁创建的项目
+		form.instance.bucket = bucket
+		form.instance.region = region
 		form.instance.creator = request.tracer.user
 		# 创建项目
 		form.save()

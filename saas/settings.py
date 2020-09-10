@@ -129,6 +129,11 @@ TENCENT_SMS_TEMPLATE = {
 	'reset': None,
 }
 
+############## 腾讯COSAPI密钥 ###########
+TENCENT_APP_ID = 0  # 自己腾讯控制台appID
+TENCENT_SECRET_ID = ""  # 自己腾讯控制台密钥ID
+TENCENT_SECRET_KEY = ""  # 自己腾讯控制台密钥
+
 ############## 登录白名单：无需登录就可以访问的页面URL ###########
 WHITE_REGEX_LIST = [
 	"/register/",

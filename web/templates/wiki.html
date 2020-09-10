@@ -1,6 +1,8 @@
 {% extends 'layout/manage.html' %}
+{% load static %}
 
 {% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.preview.min.css' %}">
     <style>
         .panel-default {
             margin-top: 10px;
@@ -71,7 +73,9 @@
                 </div>
                 <div class="col-sm-9 content">
                     {% if wiki_object %}
-                        {{ wiki_object.content }}
+                        <div id="previewMarkdown">
+                            <textarea>{{ wiki_object.content }}</textarea>
+                        </div>
                     {% else %}
                         <div style="text-align: center; margin-top: 50px">
                             <h4>《{{ request.tracer.project.name }}》Wiki文档库</h4>
@@ -88,14 +92,21 @@
 {% endblock %}
 
 {% block js %}
+    <script src="{% static 'plugin/editor-md/editormd.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/marked.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/prettify.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/raphael.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/underscore.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/sequence-diagram.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/flowchart.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/jquery.flowchart.min.js' %}"></script>
     <script>
         // http://127.0.0.1:8000/manage/3/wiki/detail/
         var WIKI_DETAIL_URL = "{% url 'wiki' project_id=request.tracer.project.id %}"
         $(function () {
             initCatalog();
-
+            initPreviewMd();
         })
-
 
         function initCatalog() {
             $.ajax({
@@ -122,5 +133,13 @@
             })
         }
 
+        /*
+        初始化markdown编辑器 （textarea转换为markdown编辑器）
+         */
+        function initPreviewMd() {
+            editormd.markdownToHTML('previewMarkdown', {
+                htmlDecode: "style,script,iframe",
+            });
+        }
     </script>
 {% endblock %}

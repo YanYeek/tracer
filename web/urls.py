@@ -40,9 +40,10 @@ urlpatterns = [
 		url(r'^wiki/$', wiki.wiki, name='wiki'),
 		url(r'^wiki/add/$', wiki.wiki_add, name='wiki_add'),
 		url(r'^wiki/catalog/$', wiki.wiki_catalog, name='wiki_catalog'),
-		url(r'^wiki/detail/$', wiki.wiki_detail, name='wiki_detail'),
+		# url(r'^wiki/detail/$', wiki.wiki_detail, name='wiki_detail'),
 		url(r'^wiki/delete/(?P<wiki_id>\d+)$', wiki.wiki_delete, name='wiki_delete'),
 		url(r'^wiki/edit/(?P<wiki_id>\d+)$', wiki.wiki_edit, name='wiki_edit'),
+		url(r'^wiki/upload/$', wiki.wiki_upload, name='wiki_upload'),
 
 		url(r'^setting/$', manage.setting, name='setting'),
 	]), None, None),
