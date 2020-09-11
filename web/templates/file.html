@@ -23,7 +23,19 @@
         <div class="panel panel-default" style="margin-top: 20px">
             <!-- Default panel contents -->
             <div class="panel-heading">
-                <div>1</div>
+                <div>
+                    <a href="{% url 'file' project_id=request.tracer.project.id %}">
+                        <i class="fa fa-home" aria-hidden="true"></i>
+                        <span>文件库</span>
+                    </a>
+                    {% for record in breadcrumb_list %}
+                        <a href="{% url 'file' project_id=request.tracer.project.id %}?folder={{ record.id }}">
+                            <i class="fa fa-caret-right" aria-hidden="true"></i>
+                            <span>{{ record.name }}</span>
+                        </a>
+                    {% endfor %}
+
+                </div>
                 <div>
                     <a class="btn btn-success btn-xs" data-toggle="modal" data-target="#addModal" data-whatever="新建文件夹">
                         <i class="fa fa-plus-circle" aria-hidden="true"></i> 新建文件夹
@@ -36,31 +48,53 @@
             <table class="table">
                 <thead>
                 <tr>
-                    <th>#</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Username</th>
+                    <th>名称</th>
+                    <th>文件大小</th>
+                    <th>更新者</th>
+                    <th>更新时间</th>
+                    <th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr>
-                    <th scope="row">1</th>
-                    <td>Mark</td>
-                    <td>Otto</td>
-                    <td>@mdo</td>
-                </tr>
-                <tr>
-                    <th scope="row">2</th>
-                    <td>Jacob</td>
-                    <td>Thornton</td>
-                    <td>@fat</td>
-                </tr>
-                <tr>
-                    <th scope="row">3</th>
-                    <td>Larry</td>
-                    <td>the Bird</td>
-                    <td>@twitter</td>
-                </tr>
+                {% for item in file_object_list %}
+                    <tr>
+                        <td>
+                            {% if item.file_type == 1 %}
+                                <i class="fa fa-file" aria-hidden="true"></i>
+                                {{ item.name }}
+                            {% else %}
+                                <a href="{% url 'file' project_id=request.tracer.project.id %}?folder={{ item.id }}">
+                                    <i class="fa fa-folder" aria-hidden="true"></i>
+                                    {{ item.name }}
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.file_type == 1 %}
+                                {{ item.file_type }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ item.update_user.username }}</td>
+                        <td>{{ item.update_datetime }}</td>
+                        <td>
+                            {% if item.file_type == 2 %}
+                                <a class="btn btn-default btn-xs"
+                                   data-toggle="modal"
+                                   data-target="#addModal"
+                                   data-name="{{ item.name }}"
+                                   data-fid="{{ item.id }}"
+                                   data-whatever="修改文件夹">
+                                    <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                                </a>
+                            {% endif %}
+                            <a class="btn btn-default btn-xs" href="#">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -77,6 +111,7 @@
                 <div class="modal-body">
                     <form id="form">
                         {% csrf_token %}
+                        <input class="hide" type="text" name="fid" id="fid">
                         {% for field in form %}
                             <div class="form-group">
                                 <label for="{{ field.id_for_label }}">{{ form.label }}</label>
@@ -107,10 +142,22 @@
 
         function initAddModal() {
             $('#addModal').on('show.bs.modal', function (event) {
-                var button = $(event.relatedTarget) // Button that triggered the modal
-                var recipient = button.data('whatever') // Extract info from data-* attributes
-                var modal = $(this)
-                modal.find('.modal-title').text(recipient)
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var recipient = button.data('whatever'); // Extract info from data-* attributes
+                var name = button.data('name'); // Extract info from data-* attributes
+                var fid = button.data('fid'); // Extract info from data-* attributes
+                var modal = $(this);
+                modal.find('.modal-title').text(recipient);
+                if (fid) {
+                    // 编辑
+                    // name
+                    modal.find('#id_name').val(name)
+                    modal.find('#fid').val(fid)
+                } else {
+                    // 新建
+                    modal.find('.error-msg').empty();
+                    $('#form')[0].reset();
+                }
             })
         }
 
