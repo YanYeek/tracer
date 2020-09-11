@@ -1925,6 +1925,769 @@ def create_bucket(bucket, region='ap-chengdu'):
 
 
 
+# day10 文件管理
+
+## 功能介绍：
+
+- 文件夹
+- 文件
+
+## 知识点：
+
+- 模态对话框 & Ajax & 后台ModelForm校验
+- 目录切换：展示当前文件夹 & 文件
+- 删除文件夹：嵌套子文件 & 文件夹删除
+- js上传文件到cos（Wiki使用的是python）
+- 进度条操作
+- 删除文件：
+	- 数据库中删除
+	- cos中也需要删除
+- 下载文件
+
+
+
+## 今日概要
+
+- 设计
+- 表结构的创建
+- 单独知识点
+
+
+
+## 今日详细
+
+### 1.功能设计
+
+![image-20200910151626614](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200910151626614.png)
+
+### 2.数据库设计
+
+| ID   | 项目ID | 名称         | 类型 | 大小 | 父目录 | 更新者 | 更新时间 | key  |
+| ---- | ------ | ------------ | ---- | ---- | ------ | ------ | -------- | ---- |
+| 1    | 9      | 阿尔法色     | 2    | 100  | null   |        |          |      |
+| 2    | 9      | 撒旦飞洒     | 2    | null | 1      |        |          |      |
+| 3    | 9      | 儿童和肉体和 | 2    | null | 1      |        |          |      |
+| 4    | 9      | 12.png       | 1    | 1000 |        |        |          |      |
+| 5    | 9      | 13.png       | 1    | 1100 |        |        |          |      |
+| 6    | 9      | 14.png       | 1    | 1000 |        |        |          |      |
+| 7    |        |              |      |      |        |        |          |      |
+
+
+
+```python
+class FileRepository(models.Model):
+	"""文件库"""
+	project = models.ForeignKey(verbose_name='项目', to='Project')
+	file_type_choices = (
+		(1, '文件'),
+		(2, '文件夹'),
+	)
+	file_type = models.SmallIntegerField(verbose_name='类型', choices=file_type_choices)
+	name = models.CharField(verbose_name='文件夹名称', max_length=32, help_text='文件/文件夹名')
+	key = models.CharField(verbose_name='文件存储在cos中的key', max_length=128, null=True, blank=True)
+	file_size = models.IntegerField(verbose_name='文件大小', null=True, blank=True)
+	file_path = models.CharField(verbose_name='文件路径', max_length=255, null=True, blank=True)
+
+	parent = models.ForeignKey(verbose_name='父级目录', to='self', related_name='child', null=True, blank=True)
+
+	update_user = models.ForeignKey(verbose_name='最近更新者', to='UserInfo')
+	update_datetime = models.DateTimeField(verbose_name='更新时间', auto_now=True)
+```
+
+### 3.知识点
+
+#### 3.1 URL传参 or 不传参
+
+```
+url(r'^file/$', manage.file, name='file'),
+```
+
+```python
+# /file/
+# /file/?folder_id=50
+def file(request, project_id)
+	folder_id = request.GET.get('folder_id')
+```
+
+#### 3.2 模态框 + 警告框
+
+![image-20200910185624355](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200910185624355.png)
+
+https://v3.bootcss.com/javascript/#alerts
+
+
+
+#### 3.3 获取导航条
+
+![image-20200910185807292](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200910185807292.png)
+
+
+
+```python
+# /file/
+# /file/?folder_id=50
+def file(request, project_id)
+	folder_id = request.GET.get('folder_id')
+    
+    url_list = []
+    if not folder_id:
+        	pass
+    else:
+        file_object = models.FileRespository.objects.filter(id=folder_id, file_type=2).first()
+        row_object = file_object
+        while row_object:
+            url_list.insert(0, row_object_name)
+            row_object = row_object.parent
+```
+
+
+
+#### 3.4 cos上传文件:python
+
+```python
+def upload_file(bucket, region, file_object, key):
+	"""
+	上传图片到cos桶
+	:param bucket:桶名称
+	:param region: 区域
+	:param file_object:图片对象
+	:param key: 图片名字
+	:return:
+	"""
+	config = CosConfig(Region=region, SecretId=settings.TENCENT_SECRET_ID, SecretKey=settings.TENCENT_SECRET_KEY)
+	client = CosS3Client(config)
+	response = client.upload_file_from_buffer(
+		Bucket=bucket,
+		Key=key,  # 上传到桶之后的名字
+		Body=file_object  # 文件对象
+	)
+	# https://picture-1302428193.cos.ap-chengdu.myqcloud.com/elephant.jpg
+	return "https://{}.cos.{}.myqcloud.com/{}".format(bucket, region, key)
+```
+
+详细:python操作cos的API(SDK)
+
+注意:密钥安全
+
+
+
+#### 3.5 cos上传文件 :js [建议官方文档]
+
+![image-20200910210301261](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200910210301261.png)
+
+
+
+##### 1. 下载js(前端SDK)
+
+地址：https://github.com/tencentyun/cos-js-sdk-v5/tree/master/dist
+
+```html
+<script src="./cos-js-sdk-v5.mim.js"></script>script>
+```
+
+##### 2. 查看官方文档
+
+​		地址https://cloud.tencent.com/document/product/436/11459
+
+```html
+<input id="file-selector" type="file" name="upload_file" multiple>
+<script src="dist/cos-js-sdk-v5.min.js"></script>
+<script>
+var Bucket = 'examplebucket-1250000000';
+var Region = 'COS_REGION';     /* 存储桶所在地域，必须字段 */
+
+// 初始化实例
+var cos = new COS({
+    getAuthorization: function (options, callback) {
+        // 异步获取临时密钥
+        $.get('http://example.com/server/sts.php', {
+            bucket: options.Bucket,
+            region: options.Region,
+        }, function (data) {
+            var credentials = data && data.credentials;
+            if (!data || !credentials) return console.error('credentials invalid');
+            callback({
+                TmpSecretId: credentials.tmpSecretId,
+                TmpSecretKey: credentials.tmpSecretKey,
+                XCosSecurityToken: credentials.sessionToken,
+                // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
+                StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
+                ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
+            });
+        });
+    }
+});
+
+// 接下来可以通过 cos 实例调用 COS 请求。
+// TODO
+
+</script>
+```
+
+格式一（推荐）：后端通过获取临时密钥给到前端，前端计算签名。
+
+```html
+<script>
+    var COS = require('cos-js-sdk-v5');
+    var cos = new COS({
+        // 必选参数
+        getAuthorization: function (options, callback) {
+            // 服务端 JS 和 PHP 例子：https://github.com/tencentyun/cos-js-sdk-v5/blob/master/server/
+            // 服务端其他语言参考 COS STS SDK ：https://github.com/tencentyun/qcloud-cos-sts-sdk
+            // STS 详细文档指引看：https://cloud.tencent.com/document/product/436/14048
+            $.get('http://example.com/server/sts.php', {
+                // 可从 options 取需要的参数
+            }, function (data) {
+                var credentials = data && data.credentials;
+                if (!data || !credentials) return console.error('credentials invalid');
+                callback({
+                    TmpSecretId: credentials.tmpSecretId,
+                    TmpSecretKey: credentials.tmpSecretKey,
+                    XCosSecurityToken: credentials.sessionToken,
+                    // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
+                    StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
+                    ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
+                });
+            });
+        }
+	});
+</script>
+```
+
+##### 3. 跨域问题
+
+![image-20200910211847785](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200910211847785.png)
+
+![image-20200910211828331](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200910211828331.png)
+
+解决:
+
+![image-20200910211935432](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200910211935432.png)
+
+
+
+#### 3.6 cos上传文件:临时密钥[推荐]
+
+![image-20200910212208461](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200910212208461.png)
+
+
+
+##### 1.路由
+
+```
+url(r'^demo2/$', manage.file, name='demo2'),
+url(r'^cos/credential/$', manage.cos_credential, name='cos_credential'),
+```
+
+##### 2.视图
+
+```python
+def demo2(request):
+	retrun render(request, 'demo2,html')
+    
+def cos_credential(request):
+    # 生成一个临时凭证,并给前端返回
+    # 1. 安装一个SDK pip isntall -U qcloud-python-sts
+    # 2. 写代码
+    from sts.sts import Sts
+    config = {
+        # 临时密钥有效期,单位秒,(30分钟=1800秒)
+        'duration_seconds': 1800,
+        # 固定密钥 id
+        'secret_id':'afdaf',
+        # 固定密钥 key
+        'secret_key': 'wagweg',
+        # 桶名称
+        'bucket': '',
+        # 桶所在地区
+        'region': 'ap-chengdu',
+        #允许的文件前缀
+        'allow_prefix':'*'
+        # 密钥权限列表
+        'allow_actions': [
+            'name/cos:PostObject',
+            # '*' # 代表所有权限都可以
+        ],
+    }
+    sts = Sts(config)
+    result_dict = sts.get_credential()
+	retrun JsonResponse(result_dict)
+```
+
+##### 3.html页面
+
+```html
+{% load stact %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    ...
+</head>
+<body>
+	<h1></h1>
+    {% block js %}
+    <script src="{% static 'js/cos-js-sdk-v5.min.js' %}"></script>
+    <script>
+        var FOLDER_URL = "{% url 'file' project_id=request.tracer.project.id %}";
+        var FILE_DELETE_URL = "{% url 'file_delete' project_id=request.tracer.project.id %}";
+        var COS_CREDENTIAL = "{% url 'cos_credential' project_id=request.tracer.project.id %}";
+        var FILE_POST = "{% url 'file_post' project_id=request.tracer.project.id %}";
+        var CURRENT_FOLDER_ID = "{{ folder_object.id }}";
+
+        $(function () {
+            initAddModal();
+            bindModelSubmit();
+            bindDeleteSubmit();
+            bindUploadFile();
+        });
+
+        function bindUploadFile() {
+            $('#uploadFile').change(function () {
+                $('#progressList').empty();
+
+                var fileList = $(this)[0].files;
+                // 获取本次要上传的每个文件 名称&大小
+                var checkFileList = [];
+                $.each(fileList, function (index, fileObject) {
+                    checkFileList.push({'name': fileObject.name, 'size': fileObject.size})
+                });
+
+                // 把这些数据发送到django后台：Django后台进行容量的校验，如果么有问题则返回临时凭证；否则返回错误信息；
+                var cos_credential = new COS({
+                    getAuthorization: function (options, callback) {
+                        $.post(COS_CREDENTIAL, JSON.stringify(checkFileList), function (res) {
+                            if (res.status) {
+                                var credentials = res.data && res.data.credentials;
+                                callback({
+                                    TmpSecretId: credentials.tmpSecretId,
+                                    TmpSecretKey: credentials.tmpSecretKey,
+                                    XCosSecurityToken: credentials.sessionToken,
+                                    StartTime: res.data.startTime,
+                                    ExpiredTime: res.data.expiredTime
+                                });
+
+                                $('#uploadProgress').removeClass('hide');
+                            } else {
+                                alert(res.error);
+                            }
+                        });
+                    }
+                });
+
+                // 上传文件（上传之前先获取临时凭证
+                $.each(fileList, function (index, fileObject) {
+                    var fileName = fileObject.name;
+                    var fileSize = fileObject.size;
+                    var key = (new Date()).getTime() + "_" + fileName;
+
+                    var tr = $('#progressTemplate').find('tr').clone();
+                    tr.find('.name').text(fileName);
+                    $('#progressList').append(tr);
+
+                    // 上传文件（异步）
+                    cos_credential.putObject({
+                        Bucket: '{{ request.tracer.project.bucket }}', /* 必须 */
+                        Region: '{{ request.tracer.project.region }}', /* 存储桶所在地域，必须字段 */
+                        Key: key, /* 必须 */
+                        Body: fileObject, // 上传文件对象
+                        onProgress: function (progressData) {
+                            var percent = progressData.percent * 100 + '%';
+                            tr.find('.progress-bar').text(percent);
+                            tr.find('.progress-bar').css('width', percent);
+                        }
+                    }, function (err, data) {
+                        if (data && data.statusCode === 200) {
+                            // 上传成功，将本次上传的文件提交到后台并写入数据
+                            // 当前文件上传成功
+                            $.post(FILE_POST, {
+                                name: fileName,
+                                key: key,
+                                file_size: fileSize,
+                                parent: CURRENT_FOLDER_ID,
+                                etag: data.ETag,
+                                file_path: data.Location
+                            }, function (res) {
+                                // 在数据库中写入成功，将已添加的数据在页面上动态展示。
+                                var newTr = $('#rowTpl').find('tr').clone();
+                                newTr.find('.name').text(res.data.name);
+                                newTr.find('.file_size').text(res.data.file_size);
+                                newTr.find('.username').text(res.data.username);
+                                newTr.find('.datetime').text(res.data.datetime);
+                                newTr.find('.delete').attr('data-fid', res.data.id);
+                                $('#rowList').append(newTr);
+
+                                // 自己的进度删除
+                                tr.remove();
+                            })
+
+                        } else {
+                            tr.find('.progress-error').text('上传失败');
+                        }
+                    });
+
+
+                })
+            });
+        }
+
+        function bindDeleteSubmit() {
+            $('#btnDelete').click(function () {
+                // 获取要删除那行ID
+                $.ajax({
+                    url: FILE_DELETE_URL,
+                    type: "GET",
+                    data: {fid: $(this).attr('fid')},
+                    success: function (res) {
+                        if (res.status) {
+                            location.href = location.href;
+                        }
+                    }
+                })
+            })
+        }
+
+        function initAddModal() {
+            $('#addModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var recipient = button.data('whatever'); // Extract info from data-* attributes
+                var name = button.data('name'); // Extract info from data-* attributes
+                var fid = button.data('fid'); // Extract info from data-* attributes
+                var modal = $(this);
+                modal.find('.modal-title').text(recipient);
+
+                if (fid) {
+                    // 编辑
+                    modal.find('#id_name').val(name);
+                    modal.find('#fid').val(fid);
+                } else {
+                    // 新建
+                    modal.find('.error-msg').empty();
+                    $('#form')[0].reset();
+                }
+            });
+
+            $('#alertModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var fid = button.data('fid'); // Extract info from data-* attributes
+                $('#btnDelete').attr('fid', fid);
+
+            })
+        }
+
+        function bindModelSubmit() {
+            $('#btnFormSubmit').click(function () {
+                $.ajax({
+                    url: location.href,
+                    type: "POST",
+                    data: $("#form").serialize(),
+                    dataType: "JSON",
+                    success: function (res) {
+                        if (res.status) {
+                            location.href = location.href;
+                        } else {
+                            $.each(res.error, function (key, value) {
+                                $("#id_" + key).next().text(value[0]);
+                            })
+                        }
+                    }
+                })
+            })
+        }
+    </script>
+{% endblock %}
+</body>
+</html>
+```
+
+
+
+##### 4.跨域解决
+
+##### 总结:
+
+- python直接上传
+- js + 临时凭证(跨域问题)
+
+
+
+#### 3.7 cos的功能 & 项目
+
+#####  1.创建项目 & 创建存储桶
+
+```python
+def project_list(request):
+	"""项目列表"""
+
+	# POST，对话框的ajax添加项目。
+	form = ProjectModelForm(request, data=request.POST)
+	if form.is_valid():
+		# 1. 为项目创建一个桶 & 创建跨域规则
+		name = form.cleaned_data.get('name')
+		bucket = "{}-{}-1302428193".format(request.tracer.user.phone, str(int(time.time())))
+		region = "ap-chengdu"
+		create_bucket(bucket=bucket, region=region)
+
+		# 把桶和区域写入数据库
+
+		# 验证通过: 项目名、颜色、描述 + creator谁创建的项目
+		form.instance.bucket = bucket
+		form.instance.region = region
+		form.instance.creator = request.tracer.user
+		# 创建项目
+		form.save()
+		return JsonResponse({'status': True})
+
+	# 验证不通过 返回错误信息
+	return JsonResponse({'status': False, 'error': form.errors})
+```
+
+```python
+def create_bucket(bucket, region='ap-chengdu'):
+	"""
+	创建桶
+	:param bucket：桶名称
+	:param region: 区域
+	:return:
+	"""
+	config = CosConfig(Region=region, SecretId=settings.TENCENT_SECRET_ID, SecretKey=settings.TENCENT_SECRET_KEY)
+	# 2. 获取客户端对象
+	client = CosS3Client(config)
+	# 参照下文的描述。或者参照 Demo 程序，详见 https://github.com/tencentyun/cos-python-sdk-v5/blob/master/qcloud_cos/demo.py
+
+	client.create_bucket(
+		Bucket=bucket,
+		ACL="public-read"  # private / public-read /public-read-write
+	)
+    
+    # 配置跨域设置
+    cors_config = {
+        'CORSRule': [
+            {
+                'AllowedOrigin': '*',
+                'AllowedMethod': ['GET', 'PUT', 'HEAD', 'POST', 'DELETE'],
+                'AllowedHeader': '*',
+                'ExposeHeader': '*',
+                'MaxAgeSeconds': 500,
+            }
+        ]
+    }
+    client.put_bucket_cors(
+    	Bucket=bucket,
+        CORAConfiguration=cors_config,
+    )
+```
+
+
+
+
+
+#### 3.8 markdown上传文件【无改动】
+
+
+
+#### 3.9 js上传文件
+
+- 临时凭证：当前项目的 桶&区域 (request.tracer.project)
+- js上传文件: 设置当前的 桶&区域
+
+
+
+
+
+#### 3.10 this
+
+```js
+var name='YanYeek'
+
+function func(){
+    var name='CC'
+    console.log(name) // CC
+}
+
+func();
+```
+
+
+
+```js
+var name='YanYeek'
+
+function func(){
+    var name='CC'
+    console.log(this.name) // YanYeek
+}
+
+func(); // this=全局window 相当于window
+```
+
+```js
+var name='YanYeek'
+info = {
+    name='Yahoo'
+    func:function(){
+        console.log(this.name) // Yahoo
+        function test(){
+            console.log(this.name)
+        }
+        teat()
+    }
+}
+
+info.func()
+```
+
+总结:每个函数都是一个作用域,在它的内部都会存在this,谁调用的函数,谁就是this
+
+不管嵌套多少次,函数被调用的前面是谁,它的this就是谁。
+
+
+
+#### 3.11 闭包
+
+```js
+data_list = [11,22,33]
+$.each(data_list, function(index,value){
+    console.log(value);
+})
+
+for(var i ;i++; i < data_list.length){
+    console.log(i, data_list[i]);
+}
+```
+
+```js
+data_list = [11,22,33]
+for(var i=0 ;i++; i < data_list.length){
+    // 循环发送3次ajax请求,由于ajax是异步请求,所有在发送请求时不会等待.
+    $.ajax({
+        url:"...",
+        data:{value:data_list[i]},
+        success: function(res){
+            // 1分钟之后执行回调函数
+        }
+    })
+}
+
+console.log("YanYeek")
+```
+
+
+
+```js
+data_list = [11,22,33]
+for(var i=0 ;i++; i < data_list.length){
+    // 循环发送3次ajax请求,由于ajax是异步请求,所有在发送请求时不会等待.
+    $.ajax({
+        url:"...",
+        data:{value:data_list[i]},
+        success: function(res){
+            // 1分钟之后执行回调函数
+            console.log(i) // 全部输出:2
+        }
+    })
+}
+
+console.log(i) // 输出:2
+```
+
+
+
+```js
+data_list = [11,22,33]
+for(var i=0 ;i++; i < data_list.length){
+    // 循环发送3次ajax请求,由于ajax是异步请求,所有在发送请求时不会等待.
+    function xx(data){        
+        $.ajax({
+            url:"...",
+            data:{value:data_list[i]},
+            success: function(res){
+                // 1分钟之后执行回调函数
+                console.log(data) // 全部输出:2
+            }
+    	})
+    }
+    xx(i)
+}
+// 用函数嵌套ajax异步请求,让它同时开了3块不同的空间,i也被data接收变成了三个不同的值,所以实现了回调函数分别打出0,1,2,的效果。
+
+console.log(i) // 输出:2
+```
+
+注意事项：如果循环,循环内容发送异步请求，一部任务成功之后，通过闭包来解决。
+
+
+
+# day11 文件管理
+
+## 今日概要
+
+- 文件夹管理
+- 文件上传
+- 思考：限制如何实现？
+
+
+
+## 今日详细
+
+### 1.文件夹管理
+
+#### 1.1 创建文件夹
+
+
+
+#### 1.2 文件列表 & 进入文件夹
+
+
+
+#### 1.3 编辑文件夹
+
+
+
+#### 1.4 删除文件夹（DB级联删除 & 删除COS文件）
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

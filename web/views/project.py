@@ -53,7 +53,7 @@ def project_list(request):
 	if form.is_valid():
 		# 1. 为项目创建一个桶
 		name = form.cleaned_data.get('name')
-		bucket = "{}-{}-{}-1302428193".format(name, request.tracer.user.phone, str(int(time.time())))
+		bucket = "{}-{}-1302428193".format(request.tracer.user.phone, str(int(time.time())))
 		region = "ap-chengdu"
 		create_bucket(bucket=bucket, region=region)
 

@@ -27,12 +27,10 @@ def wiki(request, project_id):
 	if not wiki_id or not wiki_id.isdecimal():
 		return render(request, 'wiki.html')
 	if wiki_id:
-		print("文章详细页面")
 		wiki_object = models.Wiki.objects.filter(id=wiki_id, project_id=project_id).first()
-	else:
-		print("文章首页")
+		return render(request, 'wiki.html', {'wiki_object': wiki_object})
 
-	return render(request, 'wiki.html', {'wiki_object': wiki_object})
+	return render(request, 'wiki.html')
 
 
 def wiki_add(request, project_id):
