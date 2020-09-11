@@ -48,3 +48,39 @@ def upload_file(bucket, region, file_object, key):
 	)
 	# https://picture-1302428193.cos.ap-chengdu.myqcloud.com/elephant.jpg
 	return "https://{}.cos.{}.myqcloud.com/{}".format(bucket, region, key)
+
+
+def delete_file(bucket, region, key):
+	"""
+	删除cos中的文件
+	:param bucket:桶名称
+	:param region: 区域
+	:param key: 图片名字
+	:return:
+	"""
+	config = CosConfig(Region=region, SecretId=settings.TENCENT_SECRET_ID, SecretKey=settings.TENCENT_SECRET_KEY)
+	client = CosS3Client(config)
+	client.delete_object(
+		Bucket=bucket,
+		Key=key,  # 上传到桶之后的名字
+	)
+
+
+def delete_file_list(bucket, region, key_list):
+	"""
+	删除cos中的文件
+	:param bucket:桶名称
+	:param region: 区域
+	:param key: 图片名字
+	:return:
+	"""
+	config = CosConfig(Region=region, SecretId=settings.TENCENT_SECRET_ID, SecretKey=settings.TENCENT_SECRET_KEY)
+	client = CosS3Client(config)
+	objects = {
+		"Quiet": "true",
+		"Object": key_list
+	}
+	client.delete_objects(
+		Bucket=bucket,
+		Key=objects,  # 上传到桶之后的名字
+	)
