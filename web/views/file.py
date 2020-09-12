@@ -9,10 +9,12 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.forms import model_to_dict
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 from web.forms.file import FolderModelForm
 from utils.tencent.cos import delete_file
-from utils.tencent.cos import delete_file_list
+from utils.tencent.cos import credential
 from web import models
 
 
@@ -117,11 +119,22 @@ def file_delete(request, project_id):
 
 	# models.FileRepository.objects.filter(parent=delete_object)  # 文件 删除；文件夹 继续往里查找
 	# 批量删除文件 cos
-	delete_file_list(bucket=request.tracer.project.bucket, region=request.tracer.project.bucket.region,
-	                 key_list=key_list)
+	# delete_file_list(bucket=request.tracer.project.bucket, region='cp-chengdu',
+	#                  key_list=key_list)
 	# 归还容量
 	if total_size:
 		request.tracer.project.use_space -= total_size
 		request.tracer.project.use_space.save()
 	delete_object.delete()
 	return JsonResponse({'status': True})
+
+
+@csrf_exempt
+def cos_credential(request, project_id):
+	"""获取cos凭证"""
+	file_list = json.loads(request.body.decode('utf-8'))
+	for item in file_list:
+		print(item)
+	# 获取要上传的每个文件及每个文件大小
+	data_dict = credential(bucket=request.tracer.project.bucket, region=request.tracer.project.region)
+	return JsonResponse(data_dict)

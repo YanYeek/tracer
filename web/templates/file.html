@@ -1,4 +1,5 @@
 {% extends 'layout/manage.html' %}
+{% load static %}
 
 {% block css %}
     <style>
@@ -14,6 +15,21 @@
 
         .panel-default > .panel-heading span {
             padding: 0 5px;
+        }
+
+        .panel-default > .panel-heading .function .upload {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .panel-default > .panel-heading .function .upload input {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 76px;
+            left: -2px;
+            overflow: hidden;
         }
     </style>
 {% endblock %}
@@ -36,7 +52,11 @@
                     {% endfor %}
 
                 </div>
-                <div>
+                <div class="function">
+                    <div class="btn btn-primary btn-xs upload">
+                        <div><i class="fa fa-upload" aria-hidden="true"></i> 上传文件</div>
+                        <input type="file" multiple name="uploadFile" id="uploadFile">
+                    </div>
                     <a class="btn btn-success btn-xs" data-toggle="modal" data-target="#addModal" data-whatever="新建文件夹">
                         <i class="fa fa-plus-circle" aria-hidden="true"></i> 新建文件夹
                     </a>
@@ -152,16 +172,68 @@
 {% endblock %}
 
 {% block js %}
+    <script src="{% static 'js/cos-js-sdk-v5.min.js' %}"></script>
     <script>
-
         var FOLDER_URL = "{% url 'file' project_id=request.tracer.project.id %}"
         var FILE_DELETE_URL = "{% url 'file_delete' project_id=request.tracer.project.id %}"
+        var COS_CREDENTIAL = "{% url 'cos_credential' project_id=request.tracer.project.id %}"
+
 
         $(function () {
             initAddModal()
             BindModelSubmit()
             BindDeleteSubmit()
+            BindUploadFile()
         })
+
+        function BindUploadFile() {
+            $('#uploadFile').change(function () {
+                var fileList = $(this)[0].files;
+
+                // 获取本次要上传的每个文件名称&大小
+                var checkFileList = [];
+                $.each(fileList, function (index, fileObject) {
+                    checkFileList.push({"name": fileObject.name, "size": fileObject.size})
+                })
+                // 把这些数据发到后台：django后台进行容量校验，如果没问题则返回临时凭证，有就返回错误信息。
+                $.each(checkFileList, function (index, item) {
+                    console.log(item)
+                });
+
+                var credentialObject = new COS({
+                    getAuthorization: function (options, callback) {
+                        $.post(COS_CREDENTIAL, JSON.stringify(checkFileList), function (data) {
+                            var credentials = data && data.credentials;
+                            if (!data || !credentials) return console.error('credentials invalid');
+                            callback({
+                                TmpSecretId: credentials.tmpSecretId,
+                                TmpSecretKey: credentials.tmpSecretKey,
+                                XCosSecurityToken: credentials.sessionToken,
+                                // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
+                                StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
+                                ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
+                            });
+                        });
+                    }
+                });
+                //
+                $.each(fileList, function (index, fileObject) {
+                    // 上传文件（上传之前先获取临时凭证）
+                    credentialObject.putObject({
+                        Bucket: "{{ request.tracer.project.bucket }}",
+                        Region: "{{ request.tracer.project.region }}",
+                        Key: fileObject.name,
+                        Body: fileObject,
+                        onProgress: function (progressData) {
+                            console.log("文件上传进度--->", fileName, JSON.stringify(progressData));
+                        }
+                    }, function (err, data) {
+                        console.log(err || data);
+                    });
+
+                })
+            })
+        }
 
         function BindDeleteSubmit() {
             $('#btnDelete').click(function () {
@@ -228,3 +300,5 @@
         }
     </script>
 {% endblock %}
+
+

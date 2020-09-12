@@ -1925,7 +1925,7 @@ def create_bucket(bucket, region='ap-chengdu'):
 
 
 
-# day10 文件管理
+# day10 文件管理思路
 
 ## 功能介绍：
 
@@ -2655,6 +2655,77 @@ console.log(i) // 输出:2
 #### 2.3 右下角展示进度条
 
 #### 2.4 上传文件保存到数据库
+
+
+
+
+
+# day12 文件上传
+
+## 今日概要
+
+- 获取临时凭证 & 上传文件
+- 右下角展示进度条
+- 上传文件保存到数据库
+- 容量的限制
+
+
+
+## 今日详细
+
+### 1.获取临时凭证&上传文件
+
+- 创建项目L添加跨域
+- 上传文件前：获取临时凭证
+	- 全局：默认超时之后JDK自动再次获取（官方推荐）。
+	- 局部：每次上传文件之前，进行临时凭证获取。
+
+- 容量限制：
+	- 单文件限制
+	- 总容量限制
+
+
+
+扩展：ajax向后台发送消息
+
+```js
+前端：
+$.ajax({
+    data:{name:11. age:22,xx:[11,22,33]}
+})
+
+Django后台：
+	request.POST
+	request.POST.get('name')
+	request.POST.get('age')
+	request.POST.get('xx')
+	多层嵌套的复杂数据django获取不到
+```
+
+```js
+前端：
+$.ajax({
+    data: JSON.stringfy({name:11. age:22,xx:[11,22,33]})
+})
+
+Django后台：
+	request.body
+	info = json.loads(request.body.decode('utf-8'))
+	info['name']
+把数据JSON化才行，接收要用body接收字节后要编码为字符串。
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
