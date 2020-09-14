@@ -31,6 +31,17 @@
             left: -2px;
             overflow: hidden;
         }
+
+        .upload-progress {
+            position: fixed;
+            right: 2px;
+            bottom: 2px;
+            width: 400px;
+        }
+
+        .upload-progress .progress-error {
+            color: red;
+        }
     </style>
 {% endblock %}
 
@@ -75,7 +86,7 @@
                     <th>操作</th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody id="rowList">
                 {% for item in file_object_list %}
                     <tr>
                         <td>
@@ -91,7 +102,7 @@
                         </td>
                         <td>
                             {% if item.file_type == 1 %}
-                                {{ item.file_type }}
+                                {{ item.file_size }} K
                             {% else %}
                                 -
                             {% endif %}
@@ -169,6 +180,59 @@
             </div>
         </div>
     </div>
+
+    <div id="uploadProgress" class="upload-progress hide">
+        <div class="panel panel-primary">
+            <div class="panel-heading"><i class="fa fa-cloud-upload" aria-hidden="true"></i> 上传进度</div>
+
+            <table class="table">
+                <tbody id="progressList">
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="hide">
+        <table id="progressTemplate">
+            <tr>
+                <td>
+                    <div class="name"></div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar"
+                             aria-valuenow="0"
+                             aria-valuemin="0"
+                             aria-valuemax="100" style="width: 0;">
+                            0%
+                        </div>
+                    </div>
+                    <div class="progress-error"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="hide">
+        <table id="rowTpl">
+            <tr>
+                <td>
+                    <i class="fa fa-file" aria-hidden="true"></i> <span class="name"></span>
+                </td>
+                <td class="file_size"></td>
+                <td class="username"></td>
+                <td class="datetime"></td>
+                <td>
+                    <a class="btn btn-default btn-xs download">
+                        <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                    </a>
+                    <a class="btn btn-danger btn-xs delete" data-toggle="modal" data-target="#alertModal">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </div>
+
 {% endblock %}
 
 {% block js %}
@@ -177,6 +241,8 @@
         var FOLDER_URL = "{% url 'file' project_id=request.tracer.project.id %}"
         var FILE_DELETE_URL = "{% url 'file_delete' project_id=request.tracer.project.id %}"
         var COS_CREDENTIAL = "{% url 'cos_credential' project_id=request.tracer.project.id %}"
+        var FILE_POST = "{% url 'file_post' project_id=request.tracer.project.id %}"
+        var CURRENT_FOLDER_ID = "{{ folder_object.id }}"
 
 
         $(function () {
@@ -188,6 +254,8 @@
 
         function BindUploadFile() {
             $('#uploadFile').change(function () {
+                $('#progressList').empty();
+
                 var fileList = $(this)[0].files;
 
                 // 获取本次要上传的每个文件名称&大小
@@ -195,44 +263,86 @@
                 $.each(fileList, function (index, fileObject) {
                     checkFileList.push({"name": fileObject.name, "size": fileObject.size})
                 })
-                // 把这些数据发到后台：django后台进行容量校验，如果没问题则返回临时凭证，有就返回错误信息。
-                $.each(checkFileList, function (index, item) {
-                    console.log(item)
-                });
 
+                // 把这些数据发到django后台：django后台进行容量校验，如果没问题则返回临时凭证，有就返回错误信息。
                 var credentialObject = new COS({
                     getAuthorization: function (options, callback) {
-                        $.post(COS_CREDENTIAL, JSON.stringify(checkFileList), function (data) {
-                            var credentials = data && data.credentials;
-                            if (!data || !credentials) return console.error('credentials invalid');
-                            callback({
-                                TmpSecretId: credentials.tmpSecretId,
-                                TmpSecretKey: credentials.tmpSecretKey,
-                                XCosSecurityToken: credentials.sessionToken,
-                                // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
-                                StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
-                                ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
-                            });
+                        $.post(COS_CREDENTIAL, JSON.stringify(checkFileList), function (res) {
+                            if (res.status) {
+                                var credentials = res.data && res.data.credentials;
+                                callback({
+                                    TmpSecretId: credentials.tmpSecretId,
+                                    TmpSecretKey: credentials.tmpSecretKey,
+                                    XCosSecurityToken: credentials.sessionToken,
+                                    StartTime: res.data.startTime,
+                                    ExpiredTime: res.data.expiredTime,
+                                });
+                            } else {
+                                alert(res.error)
+                            }
                         });
                     }
                 });
-                //
+
+                // 上传文件（上传之前先获取临时凭证）
                 $.each(fileList, function (index, fileObject) {
-                    // 上传文件（上传之前先获取临时凭证）
+                    var fileName = fileObject.name
+                    var fileSize = fileObject.size
+                    var key = (new Date()).getTime() + "_" + fileName
+
+                    var tr = $("#progressTemplate").find('tr').clone();
+                    tr.find('.name').text(fileName);
+                    $('#progressList').append(tr)
+                    $('#uploadProgress').removeClass('hide')
+
+                    // 上传文件（异步）
                     credentialObject.putObject({
                         Bucket: "{{ request.tracer.project.bucket }}",
                         Region: "{{ request.tracer.project.region }}",
-                        Key: fileObject.name,
+                        Key: key,
                         Body: fileObject,
                         onProgress: function (progressData) {
-                            console.log("文件上传进度--->", fileName, JSON.stringify(progressData));
+                            var percent = progressData.percent * 100 + '%'
+                            tr.find('.progress-bar').text(percent)
+                            tr.find('.progress-bar').css('width', percent)
                         }
                     }, function (err, data) {
                         console.log(err || data);
-                    });
+                        if (data && data.statusCode === 200) {
+                            // 上传成功，将本次上传的文件提交到后台并写入数据库
+                            // 当前文件上传成功
+                            $.post(FILE_POST, {
+                                name: fileName,
+                                key: key,
+                                file_size: fileSize,
+                                parent: CURRENT_FOLDER_ID,
+                                etag: data.ETag,
+                                file_path: data.Location,
+                            }, function (res) {
+                                console.log("上传成功：" + res)
+                                // 再数据库中写入成功麻将已添加的数据再页面上动态展示出来
+                                var newTr = $('#rowTpl').find('tr').clone()
+                                newTr.find('.name').text(res.data.name)
+                                newTr.find('.file_size').text(res.data.file_size)
+                                newTr.find('.username').text(res.data.username)
+                                newTr.find('.datetime').text(res.data.datetime)
+                                newTr.find('.delete').attr('data-fid', res.data.id)
+                                newTr.find('.download').attr('data-fid', res.data.id)
 
+                                $('#rowList').append(newTr);
+
+                                tr.remove();
+                                tr.addClass('hide')
+
+                            })
+
+                        } else {
+                            tr.find('.progress-error').text('上传失败')
+                        }
+                    });
                 })
-            })
+            });
+            $('#uploadProgress').addClass('hide')
         }
 
         function BindDeleteSubmit() {

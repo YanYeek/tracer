@@ -81,6 +81,24 @@ def delete_file(bucket, region, key):
 	)
 
 
+def check_file(bucket, region, key):
+	"""
+	删除cos中的文件
+	:param bucket:桶名称
+	:param region: 区域
+	:param key: 图片名字
+	:return:
+	"""
+	config = CosConfig(Region=region, SecretId=settings.TENCENT_SECRET_ID, SecretKey=settings.TENCENT_SECRET_KEY)
+	client = CosS3Client(config)
+	data = client.head_object(
+		Bucket=bucket,
+		Key=key,  # 上传到桶之后的名字
+	)
+
+	return data
+
+
 def delete_file_list(bucket, region, key_list):
 	"""
 	删除cos中的文件
@@ -121,7 +139,7 @@ def credential(bucket, region):
 		'allow_prefix': '*',
 		# 密钥权限列表
 		'allow_actions': [
-			'name/cos:PostObject',
+			'name/cos:PutObject',
 			# '*' # 代表所有权限都可以
 		],
 	}

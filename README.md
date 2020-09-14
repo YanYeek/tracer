@@ -258,6 +258,10 @@ https://gitee.com/YanYeek/SaaS.git
 ```
 进入自己想要放置代码的目录
 git clone https://gitee.com/YanYeek/SaaS.git
+# 将当前环境的模块信息保存
+pip freeze > requirements.txt
+# 根据依赖信息安装模块
+pip install -r requirements.txt
 ```
 
 ## 今天作业
@@ -2676,13 +2680,32 @@ console.log(i) // 输出:2
 ### 1.获取临时凭证&上传文件
 
 - 创建项目L添加跨域
+
 - 上传文件前：获取临时凭证
+
 	- 全局：默认超时之后JDK自动再次获取（官方推荐）。
+
+	ps：new了一个cos对象必须调用才会执行里面的方法发请求。
+
 	- 局部：每次上传文件之前，进行临时凭证获取。
 
 - 容量限制：
+
 	- 单文件限制
 	- 总容量限制
+
+	注意：容量不合法，错误提示；合法，继续上传
+
+- 继续上传
+
+- 上传成功之后：将当前上传的信息发送至数据库
+
+	- 前端向cos上传文件成功之后
+	- 前端向后台发送请求：文件大小/文件名/文件 。。。（后台数据保存到数据库）
+
+	![image-20200914092317021](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200914092317021.png)
+
+- 实时展示添加的文件
 
 
 
@@ -2718,6 +2741,59 @@ Django后台：
 
 
 
+
+
+
+
+
+
+
+# day13
+
+![image-20200914092916282](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200914092916282.png)
+
+![image-20200914092934453](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200914092934453.png)
+
+
+
+
+
+## 今日概要
+
+- 文件管理：下载
+- 项目删除
+- 问题管理：
+	- 表结构设计
+	- 新建问题
+	- 问题展示列表
+	- 分页处理
+
+
+
+
+
+## 今日详细
+
+### 1.下载文件
+
+```
+浏览器                django
+请求					HttpResponse(...)文本;响应头
+请求					render(...)		文本;响应头
+请求					...       		文件内容;响应头
+```
+
+![image-20200914095352219](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200914095352219.png)
+
+```python
+def download(request):
+    # 打开文件，获取文件的内容
+    with open('xxx.xxx', mode ='rb') as f:
+        data = f.read()
+    response = HttpResponse(data)
+    response["Content-Disposition"] = "attachment; filename=xxx.png"
+ 	return response
+```
 
 
 

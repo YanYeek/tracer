@@ -23,7 +23,7 @@ urlpatterns = [
 
 	url(r'^send/sms/$', account.send_sms, name='send_sms'),
 
-	url(r'^index/$', home.index, name='index'),
+	url(r'^/$', home.index, name='index'),
 
 	# 项目管理
 	url(r'^project/list/$', project.project_list, name='project_list'),
@@ -47,6 +47,7 @@ urlpatterns = [
 
 		url(r'^file/$', file.file, name='file'),
 		url(r'^file/delete/$', file.file_delete, name='file_delete'),
+		url(r'^cos/post/$', file.file_post, name='file_post'),
 		url(r'^cos/credential/$', file.cos_credential, name='cos_credential'),
 
 		url(r'^setting/$', manage.setting, name='setting'),
