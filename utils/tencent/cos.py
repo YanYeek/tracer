@@ -9,6 +9,7 @@
 from qcloud_cos import CosConfig
 from qcloud_cos import CosS3Client
 from django.conf import settings
+from qcloud_cos.cos_exception import CosServiceError
 import sys
 
 
@@ -146,3 +147,44 @@ def credential(bucket, region):
 	sts = Sts(config)
 	result_dict = sts.get_credential()
 	return result_dict
+
+
+def delete_bucket(bucket, region):
+	""" 删除桶 """
+	config = CosConfig(Region=region, SecretId=settings.TENCENT_SECRET_ID, SecretKey=settings.TENCENT_SECRET_KEY)
+	client = CosS3Client(config)
+	try:
+
+		# 找到 文件 & 删除
+		while 1:
+			# 先找到桶中所有文件
+			# 每次只获取1000个文件
+			part_objects = client.list_objects(bucket)
+			contents = part_objects.get("Contents")
+			if not contents:
+				# 已经删除完毕，为空值
+				break
+			# 批量删除
+			objects = {
+				"Quiet": "true",
+				"Object": [{"Key": item["Key"]} for item in contents]
+			}
+			client.delete_objects(bucket, objects)
+			#
+			if part_objects['IsTruncated'] == "false":
+				break
+
+		# 找到 碎片 & 删除
+		while 1:
+			part_uploads = client.list_multipart_uploads(bucket)
+			uploads = part_uploads.get('Upload')
+			if not uploads:
+				break
+			for item in uploads:
+				client.abort_multipart_upload(bucket, item['Key'], item['UploadId'])
+			if part_uploads['IsTruncated'] == "false":
+				break
+		# 删除桶
+		client.delete_bucket(bucket)
+	except CosServiceError as e:
+		pass

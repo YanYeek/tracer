@@ -13,6 +13,7 @@ from web.views import project
 from web.views import manage
 from web.views import wiki
 from web.views import file
+from web.views import setting
 
 urlpatterns = [
 	url(r'^register/$', account.register, name='register'),
@@ -23,7 +24,7 @@ urlpatterns = [
 
 	url(r'^send/sms/$', account.send_sms, name='send_sms'),
 
-	url(r'^/$', home.index, name='index'),
+	url(r'^$', home.index, name='index'),
 
 	# 项目管理
 	url(r'^project/list/$', project.project_list, name='project_list'),
@@ -47,10 +48,12 @@ urlpatterns = [
 
 		url(r'^file/$', file.file, name='file'),
 		url(r'^file/delete/$', file.file_delete, name='file_delete'),
-		url(r'^cos/post/$', file.file_post, name='file_post'),
 		url(r'^cos/credential/$', file.cos_credential, name='cos_credential'),
+		url(r'^file/post/$', file.file_post, name='file_post'),
+		url(r'^file/download/(?P<file_id>\d+)$', file.download, name='download'),
 
-		url(r'^setting/$', manage.setting, name='setting'),
+		url(r'^setting/$', setting.setting, name='setting'),
+		url(r'^setting/delete/$', setting.delete, name='setting_delete'),
 	]), None, None),
 ]
 # 项目管理

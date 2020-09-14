@@ -6,11 +6,13 @@
 @time: 2020/9/10 23:03
 @desc:
 '''
-from django.shortcuts import render
+from django.shortcuts import render, reverse, HttpResponse
+from django.utils.encoding import escape_uri_path
 from django.http import JsonResponse
 from django.forms import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
 import json
+import requests
 
 from web.forms.file import FolderModelForm
 from web.forms.file import FileModelForm
@@ -192,8 +194,22 @@ def file_post(request, project_id):
 			'file_size': instance.file_size,
 			'username': instance.update_user.username,
 			'datetime': instance.update_datetime.strftime('%Y{y}%m{m}%d{d} %H:%M').format(y='年', m='月', d='日'),
-			'file_path': instance.file_path,
+			'download_url': reverse('download', kwargs={"project_id": project_id, "file_id": instance.id}),
 		}
 		return JsonResponse({'status': True, 'data': result})
 
 	return JsonResponse({'status': False, 'data': "文件错误"})
+
+
+def download(request, project_id, file_id):
+	""" 用户点击下载文件 """
+	file_object = models.FileRepository.objects.filter(id=file_id, project_id=project_id).first()
+	# 文件分块处理（适用于大文件）
+	res = requests.get(file_object.file_path)
+	data = res.iter_content()
+	# 设置content_type='application/octet-stream' 用于提示下载框
+	response = HttpResponse(data, content_type='application/octet-stream')
+
+	# 设置响应头：中文文件名转义
+	response["Content-Disposition"] = "attachment; filename={}".format(escape_uri_path(file_object.name))
+	return response

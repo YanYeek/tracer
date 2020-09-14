@@ -119,6 +119,11 @@
                                    data-whatever="修改文件夹">
                                     <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
                                 </a>
+                            {% else %}
+                                <a class="btn btn-default btn-xs download"
+                                   href="{% url 'download' project_id=request.tracer.project.id file_id=item.id %}">
+                                    <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                                </a>
                             {% endif %}
                             <a class="btn btn-danger btn-xs"
                                data-toggle="modal"
@@ -327,7 +332,7 @@
                                 newTr.find('.username').text(res.data.username)
                                 newTr.find('.datetime').text(res.data.datetime)
                                 newTr.find('.delete').attr('data-fid', res.data.id)
-                                newTr.find('.download').attr('data-fid', res.data.id)
+                                newTr.find('.download').attr('href', res.data.id)
 
                                 $('#rowList').append(newTr);
 
