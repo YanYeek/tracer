@@ -10,6 +10,9 @@ class UserInfo(models.Model):
 	phone = models.CharField(verbose_name='手机号', max_length=32)
 	password = models.CharField(verbose_name='密码', max_length=32)
 
+	def __str__(self):
+		return self.username
+
 
 # 提升查询价格策略性能 创建一个项目个数，创建项目时自增，提高查看项目个数效率
 # price_policy = models.ForeignKey(verbose_name='价格策略', to='PricePolicy', null=True, blank=True)

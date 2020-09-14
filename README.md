@@ -2840,7 +2840,50 @@ def download(request):
 
 #### 3.2 新建问题
 
+##### 3.2.1 模态对话框
 
+- 显示对话框
+- 显示用户要填写的数据（表单）
+
+前端插件：
+
+- bootstrap-datepicker
+
+	```
+	css
+	js
+	找到标签处理
+	```
+
+- bootstrap-select插件
+
+	```python
+	css
+	js
+	ModelForm中添加属性
+	class IssuesModalForm(BootStrapForm, forms.ModelForm):
+		class Meta:
+			model = models.Issues
+			exclude = ['project', 'creator', 'create_datetime', 'latest_update_datetime']
+			widgets = {
+				'assign': forms.Select(attrs={'class': 'selectpicker', 'data-live-search': 'true'}),
+				'attention': forms.SelectMultiple(
+					attrs={'class': 'selectpicker', 'data-live-search': 'true', 'data-actions-box': 'true'}),
+			}
+	class BootStrapForm(object):
+		bootstrap_class_exclude = []
+	
+		def __init__(self, *args, **kwargs):
+			super().__init__(*args, **kwargs)
+			for name, field in self.fields.items():
+				if name in self.bootstrap_class_exclude:
+					continue
+				old_class = field.widget.attrs.get('class', '')
+				field.widget.attrs['class'] = f'{old_class} form-control'
+				field.widget.attrs['placeholder'] = '请输入%s' % (field.label,)		
+	```
+
+	​	
 
 #### 3.3 问题列表
 
@@ -2852,7 +2895,27 @@ def download(request):
 
 
 
+# day14
 
+## 今日概要
+
+- 添加问题
+- 问题列表 + 分页
+- 编辑问题
+	- 回复
+	- 问题变更
+
+
+
+## 今日详细
+
+### 1.添加问题
+
+#### 1.1 数据初始化和合法性
+
+#### 1.2 添加数据（成功之后刷新页面）
+
+#### 1.3 错误提示
 
 
 
