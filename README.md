@@ -2944,7 +2944,20 @@ def download(request):
 
 #### 2.2 分页
 
+```
+http://127.0.0.1:8000/manage/10/issues/?page=1
+http://127.0.0.1:8000/manage/10/issues/?page=2
+- 数据库获取数据
+	models.User.object.all(0:10)
+	models.User.object.all(10:20)
+	...
+- 显示页面
+	- 点击当前显示的页面选中
+	- 显示11个页面（前五个、后五个，根据总页数与当前页，自适应显示）
 
+```
+
+了解逻辑，整理出一个class，以后直接用。
 
 
 
