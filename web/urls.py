@@ -56,6 +56,7 @@ urlpatterns = [
 		url(r'^setting/delete/$', setting.delete, name='setting_delete'),
 
 		url(r'^issues/$', issues.issues, name='issues'),
+		url(r'^issues/detail/(?P<issues_id>\d+)$', issues.issues_detail, name='issues_detail'),
 	]), None, None),
 ]
 # 项目管理
