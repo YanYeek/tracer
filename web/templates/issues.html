@@ -1,6 +1,6 @@
 {% extends 'layout/manage.html' %}
 {% load static %}
-{#{% load issues %}#}
+{% load issues %}
 {% block css %}
     <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.min.css' %}">
     <link rel="stylesheet" href="{% static 'plugin/bootstrap-datepicker/css/bootstrap-datepicker.min.css' %}">
@@ -71,7 +71,7 @@
                         <tr>
                             <td class="number">
                                 <i class="fa fa-circle text-{{ item.priority }}"></i>
-                                {#                                {% string_just item.id %}#}
+                                {% string_just item.id %}
                                 <a target="_blank" href="#"></a>
                             </td>
                             <td class="issue">
@@ -88,19 +88,25 @@
                                     </span>
                                     {% if item.assign %}
                                         <span>
-                                        <i class="fa fa-hand-o-right" aria-hidden="true"></i>
-                                        {{ item.assign.username }}
-                                    </span>
+                                            <i class="fa fa-hand-o-right" aria-hidden="true"></i>
+                                            {{ item.assign.username }}
+                                        </span>
                                     {% endif %}
 
                                     <span>
                                         <i class="fa fa-user-o" aria-hidden="true"></i>
                                         {{ item.creator.username }}
                                     </span>
+                                    {% if item.start_date %}
+                                        <span><i class="fa fa-hourglass-start"
+                                                 aria-hidden="true"></i> {{ item.start_time }} 开始</span>
+                                    {% endif %}
+
                                     {% if item.end_date %}
                                         <span><i class="fa fa-calendar"
                                                  aria-hidden="true"></i> {{ item.end_date }} 截止</span>
                                     {% endif %}
+
                                     <span><i class="fa fa-clock-o"
                                              aria-hidden="true"></i> {{ item.latest_update_datetime }} 更新</span>
                                 </div>
@@ -341,8 +347,7 @@
             editormd('editor', {
                 placeholder: "请输入内容",
                 height: 300,
-                {#                {% static 'plugin/editor-md/lib/' %}#}
-                path: "",
+                path: "{% static 'plugin/editor-md/lib/' %}",
                 imageUpload: true,
                 imageFormats: ["jpg", 'jpeg', 'png', 'gif'],
                 imageUploadURL: WIKI_UPLOAD_URL

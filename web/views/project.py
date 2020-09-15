@@ -64,7 +64,14 @@ def project_list(request):
 		form.instance.region = region
 		form.instance.creator = request.tracer.user
 		# 创建项目
-		form.save()
+		instance = form.save()
+
+		# 3 项目初始化项目类型
+		issue_type_object_list = []
+		for item in models.IssuesType.PRO_INIT_LIST:
+			issue_type_object_list.append(models.IssuesType(project=instance, title=item))
+		models.IssuesType.objects.bulk_create(issue_type_object_list)
+
 		return JsonResponse({'status': True})
 
 	# 验证不通过 返回错误信息

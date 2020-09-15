@@ -2917,7 +2917,32 @@ def download(request):
 
 #### 1.3 错误提示
 
+`为了避免插入error-msg冲突，把form渲染的内容嵌套一个div，但是bootstrap-select默认会在嵌套一个div，应用了此插件可不用嵌套`
 
+```html
+<div class="col-md-8 clearfix">
+<div>
+{{ form.status }}
+</div>
+<div class="error-msg"></div>
+```
+
+#### 1.4 扩展
+
+```
+- bootstrap-select
+- 下拉框渲染（自定义插件）
+```
+
+
+
+### 2.问题列表分页
+
+#### 2.1 问题列表
+
+
+
+#### 2.2 分页
 
 
 
