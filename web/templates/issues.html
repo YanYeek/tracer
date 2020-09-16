@@ -400,6 +400,7 @@
     <script>
         var WIKI_UPLOAD_URL = "{% url 'wiki_upload' project_id=request.tracer.project.id %}";
         var POST_ISSUES = "{% url 'issues' project_id=request.tracer.project.id %}";
+        var INVITE_URL = "{% url 'invite_url' project_id=request.tracer.project.id %}";
 
         $(function () {
             bindBootStrapShownEvent();
@@ -407,7 +408,43 @@
             bindAddSubmit();
             bindClickCheckFilter();
             initSelect2();
+            bindCreateInviteCode()
+            bindCopyUrl()
         });
+
+        /*
+        点击复制邀请码
+        */
+        function bindCopyUrl() {
+            $('#btnCopyUrl').click(function () {
+                var textInput = $('#inviteUrl')[0];
+                textInput.select()
+                document.execCommand("Copy");
+                alert("复制成功")
+            })
+        }
+
+        function bindCreateInviteCode() {
+            $('#btnGenInviteCode').click(function () {
+                $.ajax({
+                    url: INVITE_URL,
+                    type: "POST",
+                    data: $('#inviteForm').serialize(),
+                    dataType: "JSON",
+                    success: function (res) {
+                        if (res.status) {
+                            $('#inviteArea').removeClass('hide').find('#inviteUrl').val(res.data);
+                        } else {
+                            $.each(res.error, function (k, v) {
+                                $('#id_' + k).next('.error-msg').text(v[0]);
+
+                            })
+                        }
+                    }
+                })
+            })
+        }
+
 
         // 初始化select2插件样式
         function initSelect2() {
@@ -419,7 +456,7 @@
                 location.href = e.params.data.id;
             })
         }
-        ;
+
 
         /*
         点击筛选的checkbox
