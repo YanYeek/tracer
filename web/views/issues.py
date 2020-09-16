@@ -34,7 +34,23 @@ class CheckFilter(object):
 			value_list = self.request.GET.getlist(self.name)
 			if key in value_list:
 				ck = "checked"
-			html = f'<a class="cell" href="#"><input type="checkbox" {ck} /><label>{text}</label></a>'
+				value_list.remove(key)
+			else:
+				value_list.append(key)
+			# 为自己生成url【在当前的基础上新增】
+			query_dict = self.request.GET.copy()
+			query_dict._mutable = True
+			query_dict.setlist(self.name, value_list)  # {'status':[1,2,3], 'xx': [1,]}
+			if 'page' in query_dict:
+				# 结合分页组件，加筛选条件是要初始化分页。
+				query_dict.pop('page')
+
+			param_url = query_dict.urlencode()
+			if param_url:
+				param_url = f"{self.request.path_info}?{query_dict.urlencode()}"  # status=1&status=2&xx=1
+			else:
+				param_url = self.request.path_info
+			html = f'<a class="cell" href="{param_url}"><input type="checkbox" {ck} /><label>{text}</label></a>'
 			yield mark_safe(html)
 
 
