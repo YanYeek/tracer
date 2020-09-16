@@ -32,7 +32,7 @@ class IssuesModalForm(BootStrapForm, forms.ModelForm):
 			project=request.tracer.project).values_list('id', 'title')
 
 		# 2 获取当前项目的所有模块
-		module_list = [("", "没有选中如何项")]
+		module_list = [("", "没有选中任何项")]
 		object_list = models.Module.objects.filter(project=request.tracer.project).values_list('id', 'title')
 		module_list.extend(object_list)
 		self.fields['module'].choices = module_list
@@ -51,3 +51,9 @@ class IssuesModalForm(BootStrapForm, forms.ModelForm):
 		parent_object_list = models.Issues.objects.filter(project=request.tracer.project).values_list('id', 'subject')
 		parent_list.extend(parent_object_list)
 		self.fields['parent'].choices = parent_list
+
+
+class IssuesReplyModelForm(forms.ModelForm):
+	class Meta:
+		model = models.IssuesReply
+		fields = ['content','reply']

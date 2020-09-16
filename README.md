@@ -2967,13 +2967,179 @@ http://127.0.0.1:8000/manage/10/issues/?page=2
 
 
 
+#### 3.2 问题讨论（回复嵌套}
+
+| ID   | 内容 | 类型     | 评论者/修改者 | 自己FK | 问题FK |
+| ---- | ---- | -------- | ------------- | ------ | ------ |
+|      |      | 回复     |               |        |        |
+|      |      | 修改记录 |               |        |        |
+|      |      |          |               |        |        |
+
+
+
+##### 3.2.1 ajax请求回去所有评论
+
+- 获取评论
+- js嵌套展示
+
+##### 3.2.2 评论 & 回复
+
+- 评论
+- 回复
+
+
+
+# day15
+
+## 今日概要
+
+- 问题跟新 + 操作记录
+- 问题列表筛选
+- 邀请成员
 
 
 
 
 
+## 今日详细
+
+### 1.知识点
+
+#### 1.1 反射
 
 
+
+```python
+print(xxx_object.name)
+getattr(xx_object,"name")
+示例1：
+	request.POST
+    getattr(reuqest,"name")
+示例2：
+	row = models.User.objects.filter(id=1).first()
+    row.name
+    row.email
+    getattr(reuqest,"name")    
+```
+
+```python
+xxx_object.name = "YanYeek"
+setattr(xxx_object,"name","YanYeek")
+
+示例1：
+	row = models.User.objects.filter(id=1).first()
+    row.email = "aeff@wef.com"
+    setattr(row,"email","aeff@wef.com")
+    row.save()
+```
+
+需求：我通过ajax发送一个数据{“v1”: ”email”, “v2”: ”aeff@wef.com”,}，{“v1”: ”name”, “v2”: ”YanYeek”,}，{“v1”: ”age”, “v2”: ”18”,}， 获取到这个字典后，对数据库中的用户表进行一次更新操作。
+
+后端代码不用更改
+
+```python
+def index(request):
+    data_dict = json.loads(request.body.decode('utf-8'))
+    user_object = models.User.objects.filter(id=1).first()
+    setattr(user_object,data_dict["v1"],data_dict["v2"])
+    user_object.save()
+    
+    return JsonResponse({"status": Ture})
+```
+
+
+
+#### 1.2 orm字段
+
+需求：前端发送json{‘key’,: ‘email’}, 后端结束到数据之后，去ORM类User中校验是否允许为空。
+
+```python
+class UserInfo(models.Model):
+	username = models.CharField(verbose_name='用户名', max_length=32, db_index=True)  # 创建索引，加快查询速度
+	email = models.EmailField(verbose_name='邮箱', max_length=32)
+	phone = models.CharField(verbose_name='手机号', max_length=32)
+	password = models.CharField(verbose_name='密码', max_length=32)
+
+def index(request):
+    data_dict = json,loads(request,body.decode('utf-8'))
+    data_dict["key"] # "email"
+	models.UserInfo._meta.get_field("email")
+    field_object.verbose_name # 邮箱；密码
+    field_object.null # True；False
+```
+
+
+
+#### 1.3 可迭代对象
+
+如果一个对象中存在`__iter__` 方法，且它返回一个迭代器。那么我们将根据类创建的对象，为可迭代对象。
+
+时可迭代对象支持for循环
+
+```python
+class Foo:
+    pass
+obj1 = Foo()
+obj2 = Foo()
+```
+
+```python
+class Bar:
+    def __iter__(self):
+        yield 1
+        yield 2
+        yield 3
+        
+obj3 = Bar()
+obj4 = Bar()
+for item in obj3:
+    print(item) # 1 2 3
+```
+
+示例：
+
+```python
+class Bar:
+    def __iter__(self):
+		yield 1
+		yield 2
+        yield 3
+
+def index(request):
+    obj = Bar()
+    return render(request, 'index.html', {'data_list':obj})
+```
+
+
+
+```html
+<html>
+    ...
+    <ul>
+        {% for data in data_list %}
+        	<li>{{ data }}</li>
+        {% endfor %}
+    </ul>
+</html>
+```
+
+
+
+### 2.问题的更新
+
+#### 2.1 给点的的标签绑定事件
+
+
+
+#### 2.2 出发事件发送ajax
+
+
+
+#### 2.3 后台接收数据并做跟新
+
+
+
+#### 2.4 生成更新记录返回前端
 
 
 
