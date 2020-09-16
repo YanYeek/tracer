@@ -14,6 +14,7 @@ from django.utils.safestring import mark_safe
 
 from web.forms.issues import IssuesModalForm
 from web.forms.issues import IssuesReplyModelForm
+from web.forms.issues import InviteModelForm
 from utils.pagination import Pagination
 from web import models
 
@@ -94,7 +95,7 @@ class SelectFilter(object):
 def issues(request, project_id):
 	if request.method == "GET":
 		# 筛选条件（根据用户通过GET传过来的参数实现）
-		allow_filter_name = ['issues_type', 'status', 'priority']
+		allow_filter_name = ['issues_type', 'status', 'priority', 'assign', 'attention']
 		condition = {}
 		for name in allow_filter_name:
 			value_list = request.GET.getlist(name)
@@ -128,8 +129,11 @@ def issues(request, project_id):
 		join_user = models.ProjectUser.objects.filter(project_id=project_id).values_list('user_id',
 		                                                                                 'user__username')
 		project_total_user.extend(join_user)
+
+		invite_form = InviteModelForm()
 		context = {
 			'form': form,
+			'invite_form': invite_form,
 			'issues_object_list': issues_object_list,
 			'page_html': page_object.page_html(),
 			'filter_list': [
@@ -137,6 +141,7 @@ def issues(request, project_id):
 				{'title': '状态', 'filter': CheckFilter('status', models.Issues.status_choices, request), },
 				{'title': '优先级', 'filter': CheckFilter('priority', models.Issues.priority_choices, request), },
 				{'title': '指派者', 'filter': SelectFilter('assign', project_total_user, request), },
+				{'title': '关注者', 'filter': SelectFilter('attention', project_total_user, request), },
 			],
 		}
 		return render(request, 'issues.html', context=context)

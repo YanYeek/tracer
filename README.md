@@ -3172,5 +3172,76 @@ def index(request):
 
 
 
+### 2.邀请
+
+#### 2.1 表结构设计
+
+| ID   | 有效期 | 数量 | 使用数量 | 创建者 | 邀请码 | 项目 |      |
+| ---- | ------ | ---- | -------- | ------ | ------ | ---- | ---- |
+| 1    | 2      | 2    | 1        | 1      |        |      |      |
+|      |        |      |          |        |        |      |      |
+|      |        |      |          |        |        |      |      |
+
+```python
+class ProjectInvite(models.Model):
+	""" 项目邀请码 """
+
+	project = models.ForeignKey(verbose_name='项目', to='Project')
+	code = models.CharField(verbose_name='邀请码', max_length=64, unique=True)
+	count = models.PositiveIntegerField(verbose_name='限制数量', null=True, blank=True, help_text="空代表无数量限制")
+	use_count = models.PositiveIntegerField(verbose_name='已邀请数量', default=0)
+	period_choices = (
+		(30, '30分钟'),
+		(60, '一小时'),
+		(300, '5小时'),
+		(1440, '34小时'),
+	)
+	period = models.IntegerField(verbose_name='有效期', choices=period_choices, default=1440)
+	create_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+	creator = models.ForeignKey(verbose_name='创建者', to='UserInfo', related_name='create_invite')
+```
+
+
+
+#### 2.2 开发
+
+##### 2.2.1 对话框
+
+##### 2.2.2 生成邀请码
+
+##### 2.2.3 访问
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
