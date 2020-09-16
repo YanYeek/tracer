@@ -5,6 +5,8 @@
     <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.min.css' %}">
     <link rel="stylesheet" href="{% static 'plugin/bootstrap-datepicker/css/bootstrap-datepicker.min.css' %}">
     <link rel="stylesheet" href="{% static 'plugin/bootstrap-select/css/bootstrap-select.min.css' %}">
+    <link rel="stylesheet" href="{% static 'plugin/select2/css/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'plugin/select2/css/select2.min.css' %}">
     <style>
         .issues-list .number {
             width: 100px;
@@ -352,6 +354,8 @@
     <script src="{% static 'plugin/bootstrap-datepicker/locales/bootstrap-datepicker.zh-CN.min.js' %}"></script>
     <script src="{% static 'plugin/bootstrap-select/js/bootstrap-select.min.js' %}"></script>
     <script src="{% static 'plugin/bootstrap-select/js/i18n/defaults-zh_CN.min.js' %}"></script>
+    <script src="{% static 'plugin/select2/js/select2.min.js' %}"></script>
+    <script src="{% static 'plugin/select2/js/i18n/zh-CN.js' %}"></script>
     <script>
         var WIKI_UPLOAD_URL = "{% url 'wiki_upload' project_id=request.tracer.project.id %}";
         var POST_ISSUES = "{% url 'issues' project_id=request.tracer.project.id %}";
@@ -361,12 +365,18 @@
             initDatePicker();
             bindAddSubmit();
             bindClickCheckFilter();
+            initSelect2();
         });
+
+        // In your Javascript (external .js resource or <script> tag)
+        function initSelect2() {
+            $('.select2').select2();
+        }
+        ;
 
         /*
         点击筛选的checkbox
         */
-
         function bindClickCheckFilter() {
             $('.filter-area').find(':checkbox').click(function () {
                 location.href = $(this).parent().attr('href')
