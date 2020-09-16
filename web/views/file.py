@@ -92,7 +92,7 @@ def file_delete(request, project_id):
 	if delete_object.file_type == 1:
 		# 删除文件（数据库文件删除、cos存储文件删除、项目空间容量还回去 单位：默认字节）
 		# 删除文件，将容量返还当前项目
-		request.tracer.project.use_space += delete_object.file_size
+		request.tracer.project.use_space -= delete_object.file_size
 		request.tracer.project.save()
 
 		# cos中删除文件

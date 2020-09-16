@@ -7,8 +7,6 @@
 @desc:
 '''
 from django.template import Library
-from web import models
-from django.shortcuts import reverse
 
 register = Library()
 

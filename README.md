@@ -3217,6 +3217,8 @@ class ProjectInvite(models.Model):
 
 ### 3.概览
 
+![image-20200916172048754](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200916172048754.png)
+
 #### 3.1 详细
 
 
