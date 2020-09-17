@@ -1,4 +1,5 @@
 {% extends 'layout/manage.html' %}
+{% load static %}
 {% load dashboard %}
 {% load issues %}
 {% block css %}
@@ -72,7 +73,7 @@
                         新增问题趋势
                     </div>
                     <div class="panel-body">
-                        <div id="container" style="width:100%;min-height:200px"></div>
+                        <div id="chart" style="width:100%;min-height:200px"></div>
                     </div>
                 </div>
 
@@ -190,4 +191,84 @@
             </div>
         </div>
     </div>
+{% endblock %}
+{% block js %}
+    <script src="{% static 'plugin/highcharts/highcharts.js' %}"></script>
+    <script>
+        var INIT_CHART = "{% url 'issues_chart' project_id=request.tracer.project.id %}";
+        Highcharts.setOptions({
+            global: {
+                useUTC: false
+            }
+        })
+        $(function () {
+            initChart();
+        });
+
+        function initChart() {
+            // chart
+            var config = {
+                title: {
+                    text: null // 不显示标题
+                },
+                legend: {
+                    enable: false // 不显示图例提示
+                },
+                credits: {
+                    enable: false, // 不显示版权信息
+                    text: 'YanYeek',
+                },
+                yAxis: {
+                    title: {
+                        text: '问题数' // Y轴文本显示
+                    }
+                },
+                xAxis: {
+                    type: 'datetime',
+                    tickInterval: 60 * 60 * 24 * 1000,
+                    labels: {
+                        formatter: function () {
+                            return Highcharts.dateFormat('%m-%d', this.value);
+                        },
+                        rotation: -30,
+                    }
+                },
+                tooltip: {
+                    headerFormat: '<b>{point.key}</b><br>',
+                    pointFormat: '<span style="color: {series.color}">\u25CF</span>数量：{point.y}',
+                    xDateFormat: '%Y-%m-%d'
+                },
+                plotOptions: {
+                    area: {
+                        stacking: 'normal',
+                        lineColor: '#666666',
+                        lineWidth: 1,
+                        marker: {
+                            lineWidth: 1,
+                            lineColor: '#666666',
+                        },
+                    },
+                    series: {
+                        label: {
+                            connectorAllowed: false
+                        },
+                        pointStart: 2010
+                    }
+                },
+                series: [{
+                    data: [],
+                }],
+            };
+            $.ajax({
+                url: INIT_CHART,
+                type: "GET",
+                dataType: "JSON",
+                success: function (res) {
+                    config.series[0].data = res.data
+                    var chart = Highcharts.chart('chart', config);
+                }
+            });
+
+        }
+    </script>
 {% endblock %}

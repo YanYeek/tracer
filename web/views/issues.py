@@ -380,6 +380,7 @@ def invite_url(request, project_id):
 def invite_join(request, code):
 	""" 访问邀请码 """
 	invite_object = models.ProjectInvite.objects.filter(code=code).first()
+	current_datetime = datetime.datetime.now()
 	if not invite_object:
 		return render(request, 'invite_join.html', {'error': '邀请码不存在'})
 
@@ -390,17 +391,29 @@ def invite_join(request, code):
 	if exists:
 		return render(request, 'invite_join.html', {'error': '已加入项目无需再加入'})
 
-	# 最多允许的成员
-	max_member = request.tracer.price_policy.project_member
+	# 最多允许的成员(当前项目创建者的限制）
+	max_transaction = models.Transaction.objects.filter(user=invite_object.project.creator).order_by('-id').first()
+	# 如果已经过期 使用免费额度
+	if max_transaction.pricePolicy.category == 1:
+		max_member = max_transaction.price_project.project_member
+	else:
+		if max_transaction.end_datetime < current_datetime:
+			# 如果已经过期 使用也免费额度
+			free_object = models.PricePolicy.objects.filter(category=1).first()
+			max_member = free_object.project_member
+		else:
+			# 如果没有过期，使用套餐额度
+			max_member = max_transaction.price_project.project_member
 
 	# 目前所有成员（创建在&参与者
 	current_member = models.ProjectUser.objects.filter(project=invite_object.project).count()
+	# 算上创建者
 	current_member += 1
 	if current_member >= max_member:
 		return render(request, 'invite_join.html', {'error': '项目成员超出限制，请升级套餐'})
 
 	# 邀请码是否过期？
-	current_datetime = datetime.datetime.now()
+
 	limit_datetime = invite_object.create_datetime + datetime.timedelta(minutes=invite_object.period_datetime)
 	if current_datetime > limit_datetime:
 		return render(request, 'invite_join.html', {'error': '邀请码已过期'})
@@ -412,4 +425,5 @@ def invite_join(request, code):
 		invite_object.use_count += 1
 		invite_object.save()
 	models.ProjectUser.objects.create(user=request.tracer.user, project=invite_object.project)
+	invite_object.project.join_count += 1
 	return render(request, 'invite_join.html', {'project': invite_object.project})

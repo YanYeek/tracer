@@ -124,11 +124,12 @@ class SendSmsForm(forms.Form):
 			if exists:
 				raise ValidationError('手机号已存在')
 
-		code = random.randrange(1000, 9999)
-		# 发短信
-		sms = send_sms_single(phone, template_id, [code, ])
-		if sms['result'] != 0:
-			raise ValidationError('短信发送失败，{}'.format(sms['errmsg']))
+		code = 1111
+		# code = random.randrange(1000, 9999)
+		# # 发短信
+		# sms = send_sms_single(phone, template_id, [code, ])
+		# if sms['result'] != 0:
+		# 	raise ValidationError('短信发送失败，{}'.format(sms['errmsg']))
 
 		# 验证码写入redis（django-redis）
 		conn = get_redis_connection()

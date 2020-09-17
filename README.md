@@ -3243,6 +3243,221 @@ class ProjectInvite(models.Model):
 
 
 
+# day17
+
+## 今日详细
+
+### 1.django时区
+
+```python
+# UTC 格林威治标准时间
+# Asia/Shanghai 东八区中国北京时间，快标准时间8小时整
+TIME_ZONE = 'Asia/Shanghai'
+# 为True时写入数据库时间为 UTC，False时写入数据库时间为TIME_ZONE所设置时间
+USE_TZ = True
+```
+
+
+
+### 2.bug
+
+```python
+# 最多允许的成员(当前项目创建者的限制）
+	max_transaction = models.Transaction.objects.filter(user=invite_object.project.creator).order_by('-id').first()
+	# 如果已经过期 使用免费额度
+	if max_transaction.pricePolicy.category == 1:
+		max_member = max_transaction.price_project.project_member
+	else:
+		if max_transaction.end_datetime < current_datetime:
+			# 如果已经过期 使用也免费额度
+			free_object = models.PricePolicy.objects.filter(category=1).first()
+			max_member = free_object.project_member
+		else:
+			# 如果没有过期，使用套餐额度
+			max_member = max_transaction.price_project.project_member
+```
+
+### 3.画图
+
+在网页上画图：HighCharts/Echarts
+
+#### 3.1 下载文件 
+
+https://www.highcharts.com.cn/download
+
+#### 3.2 应用
+
+```
+<script src="http://cdn.highcharts.com.cn/highcharts/8.2.0/highcharts.js"></script>
+```
+
+```html
+<div id="i1"></div>
+```
+
+```js
+var chart = Highcharts.chart('container', {
+		title: {
+				text: '2010 ~ 2016 年太阳能行业就业人员发展情况'
+		},
+		subtitle: {
+				text: '数据来源：thesolarfoundation.com'
+		},
+		yAxis: {
+				title: {
+						text: '就业人数'
+				}
+		},
+		legend: {
+				layout: 'vertical',
+				align: 'right',
+				verticalAlign: 'middle'
+		},
+		plotOptions: {
+				series: {
+						label: {
+								connectorAllowed: false
+						},
+						pointStart: 2010
+				}
+		},
+		series: [{
+				name: '安装，实施人员',
+				data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
+		}, {
+				name: '工人',
+				data: [24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434]
+		}, {
+				name: '销售',
+				data: [11744, 17722, 16005, 19771, 20185, 24377, 32147, 39387]
+		}, {
+				name: '项目开发',
+				data: [null, null, 7988, 12169, 15112, 22452, 34400, 34227]
+		}, {
+				name: '其他',
+				data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
+		}],
+		responsive: {
+				rules: [{
+						condition: {
+								maxWidth: 500
+						},
+						chartOptions: {
+								legend: {
+										layout: 'horizontal',
+										align: 'center',
+										verticalAlign: 'bottom'
+								}
+						}
+				}]
+		}
+});
+```
+
+```
+data:[
+    [时间戳，9]，
+    [时间戳，9]，
+    [时间戳，9]，
+    [时间戳，9]，
+    [时间戳，9]，
+]
+```
+
+
+
+#### 3.3 关于中文包
+
+- 提供了js文件就导入文件
+- 不提供需要自定义配置
+
+
+
+#### 总结：
+
+- 下载并引入
+
+- 应用
+
+	- 引入js
+	- 定义div
+	- js进行配置
+
+- 以后有需求： demo + api
+
+- 注意事项：series
+
+	- 生成单条图
+
+	```
+	series:[{
+		data:[1,2,3,4,5,6,7,8,9]
+	}]
+	```
+
+	
+
+	- 生成多条图
+
+	```
+	series:[
+	{	
+		name: '苹果',
+		data:[1,2,3,4,5,6,7,8,9]
+	},
+	{
+		name: '橘子',
+		data:[1,2,3,4,5,6,7,8,9]
+	},
+	{
+		name: '香蕉',
+		data:[1,2,3,4,5,6,7,8,9]
+	},
+	{
+		name: '啦啦啦',
+		data:[1,2,3,4,5,6,7,8,9]
+	},
+	]
+	```
+
+
+
+### 4.统计
+
+#### 4.1 daterangepicker插件
+
+
+
+#### 4.1 饼图
+
+
+
+#### 4.2 柱状图
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
