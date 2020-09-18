@@ -130,6 +130,12 @@
                                         <i class="fa fa-refresh" aria-hidden="true"></i>
                                         {{ item.get_status_display }}
                                     </span>
+
+                                    <span>
+                                        {{ item.creator.username }}
+                                        <i class="fa fa-eye" aria-hidden="true"></i>
+                                    </span>
+
                                     {% if item.assign %}
                                         <span>
                                             <i class="fa fa-hand-o-right" aria-hidden="true"></i>
@@ -137,10 +143,6 @@
                                         </span>
                                     {% endif %}
 
-                                    <span>
-                                        <i class="fa fa-user-o" aria-hidden="true"></i>
-                                        {{ item.creator.username }}
-                                    </span>
                                     {% if item.start_date %}
                                         <span><i class="fa fa-hourglass-start"
                                                  aria-hidden="true"></i> {{ item.start_time }} 开始</span>

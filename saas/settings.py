@@ -141,6 +141,7 @@ WHITE_REGEX_LIST = [
 	"/login/",
 	"/image/code/",
 	"/index/",
+	"/price/",
 ]
 
 try:

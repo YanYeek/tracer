@@ -28,6 +28,10 @@ urlpatterns = [
 
 	url(r'^$', home.index, name='index'),
 
+	url(r'^price/$', home.price, name='price'),
+	url(r'^payment/(?P<policy_id>\d+)/$', home.payment, name='payment'),
+	url(r'^pay/$', home.pay, name='pay'),
+
 	# 项目管理
 	url(r'^project/list/$', project.project_list, name='project_list'),
 	# /project/star/my/1
@@ -64,6 +68,8 @@ urlpatterns = [
 		url(r'^dashboard/issues/chart/$', dashboard.issues_chart, name='issues_chart'),
 
 		url(r'^statistics/$', statistics.statistics, name='statistics'),
+		url(r'^statistics/priority/$', statistics.statistics_priority, name='statistics_priority'),
+		url(r'^statistics/project/user/$', statistics.statistics_project_user, name='statistics_project_user'),
 
 	]), None, None),
 	url(r'^ivivte/join/(?P<code>\w+)$', issues.invite_join, name='invite_join'),

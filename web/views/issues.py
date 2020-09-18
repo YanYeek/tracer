@@ -120,7 +120,7 @@ def issues(request, project_id):
 			all_count=queryset.count(),
 			base_url=request.path_info,
 			query_params=request.GET,
-			per_page=2,
+			per_page=10,
 		)
 		issues_object_list = queryset[page_object.start:page_object.end]
 
