@@ -3475,6 +3475,277 @@ data:[
 
 - 沙箱环境，提供真实环境测试。
 
+	```
+	http://opendocs.alipay.com/com/open/200/105311
+	```
+
+#### 1.申请开通沙箱环境
+
+https://open.alipay.com/platform/appDaily.htm?tab=info
+
+
+
+![image-20200918133408741](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200918133408741.png)
+
+- APPID：2021000116681915
+- 应用网关
+	-   https://openapi.alipaydev.com/gateway.do 测试
+	-   https://openapi.alipay.com/gateway.do 正式
+
+#### 2.生成密钥
+
+密钥用于以后对URL中添加 的参数进行加密和校验
+
+##### 2.1 下载密钥生成器
+
+- 生成密钥
+- 应用公钥与私钥
+
+![image-20200918133915052](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200918133915052.png)
+
+
+
+生成一对密钥：
+
+![image-20200918152855533](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200918152855533.png)
+
+##### 2.2 上传应用公钥获得支付公钥
+
+![image-20200918153158207](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200918153158207.png)
+
+
+
+
+
+本次操作中总共获得三个密钥：
+
+- 应用公钥
+- 应用私钥，对url传入的数据进行加密。
+- 支付宝公钥（提供应用公钥生成），在页面支付成功后跳转回来的时候，对支付宝给我们传的值进行校验。
+
+
+
+#### 3.账户信息与测试App
+
+- 买家信息
+
+```
+买家账号duppga2985@sandbox.com
+登录密码111111
+支付密码111111
+用户名称沙箱环境
+证件类型身份证(IDENTITY_CARD)
+证件号码812627194603196449
+账户余额
+99999.00充值取现
+```
+
+- 商家信息
+
+```
+商家账号thxcef7185@sandbox.com
+商户UID2088621954963692
+登录密码111111
+账户余额
+0.00充值取现
+```
+
+- APP
+
+#### 4.两种支持
+
+- SDK，写好了一个Python模块
+
+	https://pypi.org/project/alipay-sdk-python/3.3.398/
+
+```
+1. 安装模块
+2. 基于模块执行想要的功能
+```
+
+```python
+pip install alipay-sdk-python==3.3.398
+
+# 不推荐 代码冗余费劲
+```
+
+
+
+- API，就是提供一个URL
+
+	https://opendocs.alipay.com/apis/api_1/alipay.trade.page.pay
+
+```
+1. 手动对URL进行处理和加密
+```
+
+```js
+跳转到这个网址：【网关？参数】构成
+https://openapi.alipaydev.com/gateway.do
+参数 = {
+	app_id： "2021000116681915",
+	method: "alipay.trade.page.pay",
+	format:"JSON",
+	return_url: "支付成功后跳转的页面地址",
+	notify_url: "支持向这个地址发送POST请求", // 非必选 但推荐必选设置。
+	charset: "utf-8",
+	sign_type: "rsa2",
+	sign: "",
+	timestamp: "yyyy-MM-dd HH:mm:ss",
+	version:"1.0",
+	biz_content: {
+		out_trade_no:"",  // 订单号
+    	product_code: "FAST_INSTANT_TRADE_PAY", // 销售产品码，与支付宝签约的产品码名称。
+    	total_amount:11.68, // 订单总金额，单位为元，精确到小数点后两位，取值范围[0.01,100000000]。
+    	subject: "", //订单标题
+	}
+	
+}
+```
+
+```
+如果支付成功后，服务器宕机如何处理？
+-- 偷偷向notify_url发送请求，支付成功，请修改状态。
+	服务器宕机，支付宝访问不到，则会在24小时以内不间断发送确认付款状态更新请求。
+	程序执行完后必须打印输出“success”（不包含引号）。如果商户反馈给支付宝的字符不是 success 这7个字符，支付宝服务器会不断重发通知，直到超过24小时22分钟。一般情况下，25小时以内完成8次通知（通知的间隔频率一般是：4m,10m,10m,1h,2h,6h,15h）；
+```
+
+https://opendocs.alipay.com/open/270/105902
+
+
+
+```python
+支付宝签名的过程：对参数进行处理，处理完之后再参数和网关拼接起来。
+
+跳转到这个网址：【网关？参数】构成
+https://openapi.alipaydev.com/gateway.do
+params = {
+	app_id： "2021000116681915",
+	method: "alipay.trade.page.pay",
+	format:"JSON",
+	return_url: "支付成功后跳转的页面地址",
+	notify_url: "支持向这个地址发送POST请求", // 非必选 但推荐必选设置。
+	charset: "utf-8",
+	sign_type: "rsa2",
+	sign: "",
+	timestamp: "yyyy-MM-dd HH:mm:ss",
+	version:"1.0",
+	biz_content: {
+		out_trade_no:"",  // 订单号
+    	product_code: "FAST_INSTANT_TRADE_PAY", // 销售产品码，与支付宝签约的产品码名称。
+    	total_amount:11.68, // 订单总金额，单位为元，精确到小数点后两位，取值范围[0.01,100000000]。
+    	subject: "", //订单标题
+	}
+	
+}
+1. 将参数中 空、文件、字节、sign 剔除。
+	params.pop(sign)
+    
+2. 排序
+对参数中的key排序，从小到大排 sort("params")
+获取所有请求参数，不包括字节类型参数，如文件、字节流，剔除 sign 字段，剔除值为空的参数，并按照第一个字符的键值 ASCII 码递增排序（字母升序排序），如果遇到相同字符则按照第二个字符的键值 ASCII 码递增排序，以此类推。
+
+3. 拼接
+将排序后的参数与其对应值，组合成“参数=参数值”的格式，并且把这些参数用 & 字符连接起来，此时生成的字符串为待签名字符串。
+	待签名的字符串 = "app_id=2021000116681915&method=alipay.trade.page.pay"
+	注意事项：1. 有字典也一个转换为字符串； 2. 字符串中间不能有空格
+	info = {'k1':'123','k2':'345'}
+	import json
+	json.dumps(info)
+	{'k1': '123', 'k2': '345'}
+	json.dumps(info,separators=(",",":" )) # 转换格式时不再加空格
+4. 使用各自语言对应的 SHA256WithRSA(对应sign_type为RSA2)或SHA1WithRSA(对应sign_type为RSA)签名函数利用商户私钥（应用私钥）对待签名字符串进行签名，并进行 Base64 编码。
+	使用SHA256WithRSA函数和私钥对待签名的字符串 进行签名
+    签名 = 再对result进行Base64编码
+    把签名再添加回字典中 params['sign'] = 签名
+    注意：base64编码之后的值不能有换行符 签名.replace("\n","")
+    
+5. 再将所有参数拼接起来。
+	注意：再拼接URL时不能出现【:(),{}[]-】等字符，提前将特殊字符转换URL转义的字符。
+	from urllib.parse import quote_plus
+
+https://opendocs.alipay.com/open/291/105974
+https://opendocs.alipay.com/open/291/106118
+```
+
+#### 代码实现
+
+```python
+# pip install pycrypto
+# 如果是 pycrypto.xxx.whl 下载到本地 pip install pycrypto.xxx.whl
+```
+
+
+
+```python
+# 构造字典
+params = {
+	app_id： "2021000116681915",
+	method: "alipay.trade.page.pay",
+	format:"JSON",
+	return_url: "http://127.0.0.1:8000/pay/notify/",
+	notify_url: "http://127.0.0.1:8000/pay/notify/", // 非必选 但推荐必选设置。
+	charset: "utf-8",
+	sign_type: "rsa2",
+	timestamp: "yyyy-MM-dd HH:mm:ss",
+	version:"1.0",
+	biz_content: json.dumps({
+		out_trade_no: order_id,  // 订单号
+    	product_code: "FAST_INSTANT_TRADE_PAY", // 销售产品码，与支付宝签约的产品码名称。
+    	total_amount: 11.68, // 订单总金额，单位为元，精确到小数点后两位，取值范围[0.01,100000000]。
+    	subject: "x1", //订单标题
+	},separators=(',',':'))
+	
+}
+
+# 获取待签名的字符串
+unsigned_string = "&".jion([f"{k}={params[k]}" for k in sorted(params)])
+print(unsigned_string)
+
+# 签名 SHA256WithRSA(对应sign_type为RSA2)
+from Crypto.PublicKey import RSA
+from Crypto.Signayure import PKCS_V1_5
+from Crypto.Hash import SHA256
+from base64 import decodebytes, encodebytes
+
+# SHA256WithRSA + 应用私钥 对待签名的字符串进行签名
+private_key = RSA
+
+
+```
+
+#### 5.常见报错：密钥
+
+密钥格式错误
+
+![image-20200918174747765](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200918174747765.png)
+
+格式化密钥
+
+![image-20200918183057287](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200918183057287.png)
+
+6.常见错误：钓鱼网站
+
+![image-20200918182923995](https://picture-1302428193.cos.ap-chengdu.myqcloud.com/img/image-20200918182923995.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
