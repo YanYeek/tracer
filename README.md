@@ -2132,7 +2132,7 @@ var cos = new COS({
 
 ```html
 <script>
-    var COS = require('cos-js-sdk-v5');
+    var COS = require('cos-js-ali_api_secret-v5');
     var cos = new COS({
         // 必选参数
         getAuthorization: function (options, callback) {

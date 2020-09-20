@@ -11,9 +11,12 @@ import json
 
 from django.shortcuts import render, redirect
 from django_redis import get_redis_connection
+from django.conf import settings
+from django.http import HttpResponse
 
 from web import models
 from utils.encrypt import uid
+from utils.alipay import AliPay
 
 
 def index(request):
@@ -78,6 +81,7 @@ def payment(request, policy_id):
 
 	return render(request, 'payment.html', context)
 
+
 """
 def pay(request):
 	# 生成订单 & 支付宝支付
@@ -135,7 +139,7 @@ def pay(request):
 	from base64 import decodebytes, encodebytes
 
 	# SHA256WithRSA + 应用私钥 对待签名的字符串进行签名
-	private_key = RSA.importKey(open("files/sdk/应用私钥2048.txt").read())
+	private_key = RSA.importKey(open("files/ali_api_secret/应用私钥2048.txt").read())
 	signer = PKCS1_v1_5.new(private_key)
 	signature = signer.sign(SHA256.new(unsigned_string.encode('utf8')))
 
@@ -153,10 +157,11 @@ def pay(request):
 	return redirect(ali_pay_url)
 """
 
+
 def pay(request):
 	# 生成订单 & 支付宝支付
 	# 方法1 需要对提交的数据再次做校验
-	# 方法1 使用redis保存30分钟订单
+	# 方法2 使用redis保存30分钟订单
 	conn = get_redis_connection()
 	key = f'payment_{request.tracer.user.phone}'
 	context_string = conn.get(key)
@@ -175,25 +180,54 @@ def pay(request):
 		count=context['number'],
 		price=total_price,
 	)
-	# 2. 跳转到支付宝
-	# - 根据申请的支付信息 + 支付宝文档 => 跳转链接
-	# - 生成一个支付的链接
-	# 构造字典
-	params = {
-		'app_id': "2021000116681915",
-		'method': "alipay.trade.page.pay",
-		'format': "JSON",
-		'return_url': "http://127.0.0.1:8000/pay/notify/",
-		'notify_url': "http://127.0.0.1:8000/pay/notify/",  # 非必选 但推荐必选设置。
-		'charset': "utf-8",
-		'sign_type': "RSA2",
-		'timestamp': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-		'version': "1.0",
-		'biz_content': json.dumps({
-			'out_trade_no': order_id,  # 订单号
-			'product_code': "FAST_INSTANT_TRADE_PAY",  # 销售产品码，与支付宝签约的产品码名称。
-			'total_amount': total_price,  # 订单总金额，单位为元，精确到小数点后两位，取值范围[0.01, 100000000]。
-			'subject': "tracer payment",  # 订单标题
-		}, separators=(',', ':'))
+	# 生成支付宝链接
+	ali_pay = AliPay(
+		appid=settings.ALI_APPID,
+		app_notify_url=settings.ALI_NOTIFY_URL,
+		return_url=settings.ALI_RETURN_URL,
+		app_private_key_path=settings.ALI_PRIVATE_KEY_PATH,
+		alipay_public_key_path=settings.ALI_PAY_PUBLIC_KEY_PATH,
+	)
+	query_params = ali_pay.direct_pay(
+		subject="Tracer系统会员",  # 商品简单描述
+		out_trade_no=order_id,  # 商品订单号
+		total_amount=total_price,  # 交易金额（单位：元 保留两位小数）
+	)
+	pay_url = f"{settings.ALI_GATEWAY}?{query_params}"
+	return redirect(pay_url)
 
-	}
+
+def pay_notify(request):
+	"""支付成功之后触发的URL"""
+	ali_pay = AliPay(
+		appid=settings.ALI_APPID,
+		app_notify_url=settings.ALI_NOTIFY_URL,
+		return_url=settings.ALI_RETURN_URL,
+		app_private_key_path=settings.ALI_PRIVATE_KEY_PATH,
+		alipay_public_key_path=settings.ALI_PAY_PUBLIC_KEY_PATH,
+	)
+	if request.method == "GET":
+		# 只做跳转，判断是否支付成功，不做订单状态更新
+		# 支付宝在成功收款后会讲订单号返回：获取订单ID，根据订单号做状态更新 + 认证。
+		# 支付宝公钥对数据进行检查，通过则表示是支付宝返回的接口。
+		params = request.GET.dict()
+		sign = params.pop('sign', None)
+		status = ali_pay.verify(params, sign)
+		print(status)
+		print(params)
+		if status:
+			return HttpResponse("支付完成")
+		return HttpResponse("异常请求")
+
+	else:
+		# 做订单状态更新
+		from urllib.parse import parse_qs
+		body_str = request.body.decode('utf-8')
+		post_data = parse_qs(body_str)
+		post_dict = {}
+		for k, v in post_data.items():
+			post_dict[k] = v[0]
+		sign = post_dict.pop('sign', None)
+		status = ali_pay.verify(post_dict, sign)
+
+		return HttpResponse('POST返回')
