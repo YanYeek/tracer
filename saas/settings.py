@@ -140,8 +140,9 @@ WHITE_REGEX_LIST = [
 	"/send/sms/",
 	"/login/",
 	"/image/code/",
-	"/index/",
 	"/price/",
+	"/", # 首页
+	"", # 首页
 ]
 
 try:

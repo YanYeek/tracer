@@ -40,6 +40,9 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
+                {% if request.tracer.user %}
+                    <li><a href="{% url 'project_list' %}">我的项目</a></li>
+                {% endif %}
                 <li><a href="#">产品功能</a></li>
                 <li><a href="#">企业方案</a></li>
                 <li><a href="#">帮助文档</a></li>
